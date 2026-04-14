@@ -26,12 +26,13 @@ export function SearchResults() {
   const [error, setError] = useState('');
 
   const destination = searchParams.get('destination') || '';
+  const placeId = searchParams.get('placeId') || undefined;
   const checkInDate = searchParams.get('checkInDate') || '';
   const checkOutDate = searchParams.get('checkOutDate') || '';
   const guests = searchParams.get('guests') || '1';
 
   useEffect(() => {
-    if (!destination || !checkInDate || !checkOutDate) {
+    if ((!destination && !placeId) || !checkInDate || !checkOutDate) {
       setLoading(false);
       return;
     }
@@ -47,6 +48,7 @@ export function SearchResults() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             destination,
+            placeId,
             checkInDate,
             checkOutDate,
             guests: parseInt(guests),

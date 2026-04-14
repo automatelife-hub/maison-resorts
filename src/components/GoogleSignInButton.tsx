@@ -8,12 +8,15 @@ export function GoogleSignInButton() {
   if (loading) return <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />;
 
   if (user) {
+    const displayName = user.user_metadata?.full_name || user.email?.split('@')[0];
+    const photoURL = user.user_metadata?.avatar_url;
+
     return (
       <div className="flex items-center gap-2">
-        {user.photoURL && (
-          <img src={user.photoURL} alt={user.displayName || ''} className="w-8 h-8 rounded-full" />
+        {photoURL && (
+          <img src={photoURL} alt={displayName || ''} className="w-8 h-8 rounded-full" />
         )}
-        <span className="text-sm hidden md:block">{user.displayName?.split(' ')[0]}</span>
+        <span className="text-sm hidden md:block">{displayName?.split(' ')[0]}</span>
         <button
           onClick={signOutUser}
           className="text-sm text-gray-400 hover:text-white transition-colors"

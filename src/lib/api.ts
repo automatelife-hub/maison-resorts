@@ -1,7 +1,7 @@
-import type { HotelData, Rate, Review, Currency, Facility, SearchParams, SearchFilter } from '@/types';
+import type { HotelData, Rate, Review, Currency, Facility, SearchParams, SearchFilter, Country, City } from '@/types';
 
 const LITEAPI_KEY = process.env.LITEAPI_KEY || '';
-const LITEAPI_BASE_URL = process.env.LITEAPI_BASE_URL || 'https://api.liteapi.travel/v1';
+const LITEAPI_BASE_URL = process.env.LITEAPI_BASE_URL || 'https://api.liteapi.travel/v3.0';
 const LITEAPI_VOUCHERS_BASE_URL = process.env.LITEAPI_VOUCHERS_BASE_URL || 'https://da.liteapi.travel';
 
 const headers = {
@@ -10,75 +10,186 @@ const headers = {
 };
 
 // Hotel Search & Details
-export async function searchHotels(destination: string, checkInDate: string, checkOutDate: string, guests: number) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/search?q=${destination}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}&guestNationality=US&currency=USD`, {
+export async function searchHotels(
+  destination: string, 
+  checkInDate: string, 
+  checkOutDate: string, 
+  guests: number,
+  placeId?: string
+) {
+  const body: any = {
+    checkin: checkInDate,
+    checkout: checkOutDate,
+    currency: 'USD',
+    guestNationality: 'US',
+    occupancies: [{ adults: guests }],
+    includeHotelData: true
+  };
+
+  if (placeId) {
+    body.placeId = placeId;
+  } else {
+    body.aiSearch = destination;
+  }
+
+  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
+    method: 'POST',
     headers,
+    body: JSON.stringify(body),
   });
   if (!response.ok) throw new Error('Failed to search hotels');
-  return response.json();
+  const result = await response.json();
+  
+  // Map v3.0 response to expected frontend structure
+  return {
+    data: result.hotels?.map((hotel: any) => ({
+      id: hotel.id,
+      name: hotel.name,
+      city: hotel.city,
+      address: hotel.address,
+      star_rating: hotel.starRating,
+      photo: hotel.main_photo || hotel.thumbnail || '',
+      minPrice: hotel.roomTypes?.[0]?.rates?.[0]?.net_rate || null
+    })) || []
+  };
 }
 
-export async function getHotelDetails(hotelId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/${hotelId}`, { headers });
+export async function getHotelDetails(hotelId: string): Promise<{ data: HotelData }> {
+  const response = await fetch(`${LITEAPI_BASE_URL}/data/hotels?hotelIds=${hotelId}`, { headers });
   if (!response.ok) throw new Error('Failed to get hotel details');
-  return response.json();
+  const result = await response.json();
+  const hotel = result.data?.[0];
+  if (!hotel) throw new Error('Hotel not found');
+
+  return {
+    data: {
+      id: hotel.id,
+      name: hotel.name,
+      city: hotel.city,
+      address: hotel.address,
+      star_rating: hotel.starRating,
+      photo: hotel.hotelImages?.[0]?.url || '',
+      description: hotel.hotelDescription,
+      latitude: hotel.location?.latitude,
+      longitude: hotel.location?.longitude,
+    }
+  };
 }
 
 export async function getHotelRates(hotelId: string, checkInDate: string, checkOutDate: string, guests: number) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/rates`, {
+  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ hotelId, checkInDate, checkOutDate, guestNationality: 'US', currency: 'USD' }),
+    body: JSON.stringify({
+      hotelIds: [hotelId],
+      checkin: checkInDate,
+      checkout: checkOutDate,
+      guestNationality: 'US',
+      currency: 'USD',
+      occupancies: [{ adults: guests }]
+    }),
   });
   if (!response.ok) throw new Error('Failed to get hotel rates');
-  return response.json();
+  const result = await response.json();
+  
+  // Map v3.0 response to expected structure
+  const hotel = result.hotels?.[0];
+  return {
+    data: hotel?.roomTypes?.map((room: any) => ({
+      room_id: room.roomTypeId,
+      room_name: room.roomType,
+      rates: room.rates?.map((rate: any) => ({
+        rate_id: rate.rateId,
+        net_rate: rate.net_rate,
+        selling_rate: rate.net_rate, // v3.0 might not have selling_rate directly
+        currency: 'USD',
+        board_type: rate.mealPlan || 'Room Only'
+      }))
+    })) || []
+  };
 }
 
 // Reviews & Sentiment
 export async function getReviews(hotelId: string, getSentiment: boolean = false) {
   const response = await fetch(`${LITEAPI_BASE_URL}/data/reviews?hotelId=${hotelId}&getSentiment=${getSentiment}`, { headers });
   if (!response.ok) throw new Error('Failed to get reviews');
-  return response.json();
+  const result = await response.json();
+  return result.data || [];
 }
 
 // Currency
 export async function getCurrencies(): Promise<Currency[]> {
   const response = await fetch(`${LITEAPI_BASE_URL}/data/currencies`, { headers });
   if (!response.ok) throw new Error('Failed to get currencies');
-  return response.json();
+  const result = await response.json();
+  return result.data?.map((c: any) => ({
+    code: c.code,
+    name: c.currency,
+    symbol: '' // v3.0 doesn't provide symbol in this endpoint
+  })) || [];
 }
 
 // Facilities & Hotel Types
 export async function getFacilities(): Promise<Facility[]> {
   const response = await fetch(`${LITEAPI_BASE_URL}/data/facilities`, { headers });
   if (!response.ok) throw new Error('Failed to get facilities');
-  return response.json();
+  const result = await response.json();
+  return result.data?.map((f: any) => ({
+    id: f.facility_id.toString(),
+    name: f.facility,
+    category: ''
+  })) || [];
 }
 
 export async function getHotelTypes() {
   const response = await fetch(`${LITEAPI_BASE_URL}/data/hotelTypes`, { headers });
   if (!response.ok) throw new Error('Failed to get hotel types');
-  return response.json();
+  const result = await response.json();
+  return result.data || [];
 }
 
 // Semantic Search
 export async function semanticSearch(vibe: string, destination: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/hotels/semantic-search?vibe=${vibe}&destination=${destination}`, { headers });
+  // v3.0 might use aiSearch in /hotels/rates for this
+  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      aiSearch: `${vibe} hotels in ${destination}`,
+      checkin: new Date().toISOString().split('T')[0], // dummy dates for search
+      checkout: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      currency: 'USD',
+      guestNationality: 'US',
+      occupancies: [{ adults: 2 }],
+      includeHotelData: true
+    }),
+  });
   if (!response.ok) throw new Error('Failed to perform semantic search');
-  return response.json();
+  const result = await response.json();
+  return {
+    hotels: result.hotels?.map((hotel: any) => ({
+      id: hotel.id,
+      name: hotel.name,
+      city: hotel.city,
+      star_rating: hotel.starRating,
+      photo: hotel.main_photo || '',
+    })) || []
+  };
 }
 
 // Bookings
 export async function listBookings() {
   const response = await fetch(`${LITEAPI_BASE_URL}/bookings`, { headers });
   if (!response.ok) throw new Error('Failed to list bookings');
-  return response.json();
+  const result = await response.json();
+  return result.data || [];
 }
 
 export async function getBooking(bookingId: string) {
   const response = await fetch(`${LITEAPI_BASE_URL}/bookings/${bookingId}`, { headers });
   if (!response.ok) throw new Error('Failed to get booking');
-  return response.json();
+  const result = await response.json();
+  return result.data;
 }
 
 export async function cancelBooking(bookingId: string) {
@@ -88,7 +199,8 @@ export async function cancelBooking(bookingId: string) {
     body: JSON.stringify({ status: 'cancelled' }),
   });
   if (!response.ok) throw new Error('Failed to cancel booking');
-  return response.json();
+  const result = await response.json();
+  return result.data;
 }
 
 export async function amendBooking(bookingId: string, guestName: string, guestEmail: string) {
@@ -98,30 +210,64 @@ export async function amendBooking(bookingId: string, guestName: string, guestEm
     body: JSON.stringify({ guest_name: guestName, guest_email: guestEmail }),
   });
   if (!response.ok) throw new Error('Failed to amend booking');
-  return response.json();
+  const result = await response.json();
+  return result.data;
+}
+
+// Places & Search
+export async function searchPlaces(query: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/data/places?textQuery=${encodeURIComponent(query)}`, { headers });
+  if (!response.ok) throw new Error('Failed to search places');
+  const result = await response.json();
+  return result.data || [];
+}
+
+export async function getPlaceDetails(placeId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/data/places/${placeId}`, { headers });
+  if (!response.ok) throw new Error('Failed to get place details');
+  const result = await response.json();
+  return result.data;
 }
 
 // Explore/Discovery
-export async function getCountries() {
+export async function getCountries(): Promise<Country[]> {
   const response = await fetch(`${LITEAPI_BASE_URL}/data/countries`, { headers });
   if (!response.ok) throw new Error('Failed to get countries');
-  return response.json();
+  const result = await response.json();
+  return result.data || [];
 }
 
-export async function getCities(countryCode: string) {
+export async function getCities(countryCode: string): Promise<City[]> {
   const response = await fetch(`${LITEAPI_BASE_URL}/data/cities?countryCode=${countryCode}`, { headers });
   if (!response.ok) throw new Error('Failed to get cities');
-  return response.json();
+  const result = await response.json();
+  return result.data?.map((c: any) => ({
+    id: c.city,
+    name: c.city,
+    country_code: countryCode
+  })) || [];
 }
 
 export async function getMinRates(hotelIds: string[]) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/min-rates`, {
+  // v3.0 doesn't have a direct /hotels/min-rates, use /hotels/rates
+  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ hotelIds }),
+    body: JSON.stringify({
+      hotelIds,
+      checkin: new Date().toISOString().split('T')[0],
+      checkout: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      guestNationality: 'US',
+      currency: 'USD',
+      occupancies: [{ adults: 2 }]
+    }),
   });
   if (!response.ok) throw new Error('Failed to get min rates');
-  return response.json();
+  const result = await response.json();
+  return result.hotels?.map((h: any) => ({
+    hotelId: h.id,
+    minRate: h.roomTypes?.[0]?.rates?.[0]?.net_rate || null
+  })) || [];
 }
 
 // Vouchers
@@ -141,7 +287,8 @@ export async function applyVoucher(voucherCode: string) {
 export async function getLoyaltyInfo(guestId: string) {
   const response = await fetch(`${LITEAPI_BASE_URL}/guests/${guestId}/loyalty-points`, { headers });
   if (!response.ok) throw new Error('Failed to get loyalty info');
-  return response.json();
+  const result = await response.json();
+  return result.data;
 }
 
 export async function redeemLoyaltyPoints(guestId: string, points: number) {
@@ -151,5 +298,6 @@ export async function redeemLoyaltyPoints(guestId: string, points: number) {
     body: JSON.stringify({ points }),
   });
   if (!response.ok) throw new Error('Failed to redeem points');
-  return response.json();
+  const result = await response.json();
+  return result.data;
 }
