@@ -178,6 +178,42 @@ export async function semanticSearch(vibe: string, destination: string) {
 }
 
 // Bookings
+export async function prebook(rateId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/rates/prebook`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ rateId }),
+  });
+  if (!response.ok) throw new Error('Failed to prebook rate');
+  const result = await response.json();
+  return result.data;
+}
+
+export async function book(
+  prebookId: string, 
+  guestDetails: { 
+    name: string; 
+    email: string; 
+    phone: string; 
+  },
+  paymentInfo?: any
+) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/rates/book`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      prebookId,
+      guest_name: guestDetails.name,
+      guest_email: guestDetails.email,
+      guest_phone: guestDetails.phone,
+      // payment info would go here in production
+    }),
+  });
+  if (!response.ok) throw new Error('Failed to complete booking');
+  const result = await response.json();
+  return result.data;
+}
+
 export async function listBookings() {
   const response = await fetch(`${LITEAPI_BASE_URL}/bookings`, { headers });
   if (!response.ok) throw new Error('Failed to list bookings');
@@ -277,6 +313,13 @@ export async function getVouchers() {
   return response.json();
 }
 
+export async function getGuestVouchers(guestId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/guests/${guestId}/vouchers`, { headers });
+  if (!response.ok) throw new Error('Failed to get guest vouchers');
+  const result = await response.json();
+  return result.data;
+}
+
 export async function applyVoucher(voucherCode: string) {
   const response = await fetch(`${LITEAPI_VOUCHERS_BASE_URL}/vouchers/${voucherCode}`, { headers });
   if (!response.ok) throw new Error('Failed to apply voucher');
@@ -298,6 +341,41 @@ export async function redeemLoyaltyPoints(guestId: string, points: number) {
     body: JSON.stringify({ points }),
   });
   if (!response.ok) throw new Error('Failed to redeem points');
+  const result = await response.json();
+  return result.data;
+}
+
+// Flights
+export async function searchFlights(params: {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  adults: number;
+  cabinClass?: 'ECONOMY' | 'PREMIUM_ECONOMY' | 'BUSINESS' | 'FIRST';
+  currency?: string;
+}) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/rates`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      ...params,
+      cabinClass: params.cabinClass || 'ECONOMY',
+      currency: params.currency || 'USD'
+    }),
+  });
+  if (!response.ok) throw new Error('Failed to search flights');
+  const result = await response.json();
+  return result.data || [];
+}
+
+export async function prebookFlight(flightOfferId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/prebooks`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ flightOfferId }),
+  });
+  if (!response.ok) throw new Error('Failed to prebook flight');
   const result = await response.json();
   return result.data;
 }

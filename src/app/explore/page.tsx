@@ -3,6 +3,7 @@
 import { FEATURED_DESTINATIONS } from '@/data/destinations';
 import { DestinationCard } from '@/components/DestinationCard';
 import { VibeTag } from '@/components/VibeTag';
+import { InteractiveMap } from '@/components/InteractiveMap';
 
 export default function ExplorePage() {
   return (
@@ -86,6 +87,14 @@ export default function ExplorePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-24">
+        <div className="mb-12 text-center">
+          <h2 className="text-3xl font-bold text-luxury mb-4">Discovery Map</h2>
+          <p className="text-gray-500 max-w-xl mx-auto">Explore our sanctuary collection geographically.</p>
+        </div>
+        <InteractiveMap />
       </div>
     </div>
   );

@@ -9,7 +9,9 @@ import { PlaceAutocomplete } from '@/components/PlaceAutocomplete';
 
 export default function Home() {
   const router = useRouter();
+  const [searchType, setSearchType] = useState<'hotels' | 'flights'>('hotels');
   const [destination, setDestination] = useState('');
+  const [origin, setOrigin] = useState('');
   const [placeId, setPlaceId] = useState<string | undefined>();
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
@@ -23,8 +25,14 @@ export default function Home() {
       checkOutDate,
       guests: guests.toString(),
     });
-    if (placeId) params.append('placeId', placeId);
-    router.push(`/results?${params}`);
+    
+    if (searchType === 'flights') {
+      params.append('origin', origin);
+      router.push(`/flights?${params}`);
+    } else {
+      if (placeId) params.append('placeId', placeId);
+      router.push(`/results?${params}`);
+    }
   };
 
   return (
@@ -43,29 +51,64 @@ export default function Home() {
         <div className="absolute inset-0 bg-luxury bg-opacity-60 z-10" />
         
         <div className="relative z-20 max-w-5xl mx-auto px-4 text-center">
+          <div className="flex justify-center gap-4 mb-8">
+            <button 
+              onClick={() => setSearchType('hotels')}
+              className={`px-6 py-2 rounded-full text-xs uppercase tracking-[0.2em] font-bold transition-all ${searchType === 'hotels' ? 'bg-accent text-luxury' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              Sanctuaries
+            </button>
+            <button 
+              onClick={() => setSearchType('flights')}
+              className={`px-6 py-2 rounded-full text-xs uppercase tracking-[0.2em] font-bold transition-all ${searchType === 'flights' ? 'bg-accent text-luxury' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              Voyages
+            </button>
+          </div>
+
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-white tracking-tighter">
             MAISON <span className="text-accent italic font-light">Resorts</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-            faciliating the voyage, honoring the heritage. <br/>
+            {searchType === 'hotels' 
+              ? 'faciliating the voyage, honoring the heritage.' 
+              : 'the art of arrival, refined air travel.'}
+            <br/>
             experience conscious authenticity in every stay.
           </p>
 
-          <form onSubmit={handleSearch} className="bg-white p-2 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-2 max-w-4xl mx-auto">
+          <form onSubmit={handleSearch} className="bg-white p-2 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-2 max-w-5xl mx-auto">
+            {searchType === 'flights' && (
+              <div className="flex-1 px-4 py-2 border-r border-gray-100 last:border-0">
+                <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Origin</label>
+                <input
+                  type="text"
+                  value={origin}
+                  onChange={(e) => setOrigin(e.target.value)}
+                  placeholder="From where?"
+                  className="w-full text-luxury focus:outline-none font-medium bg-transparent"
+                  required
+                />
+              </div>
+            )}
             <div className="flex-1 px-4 py-2 border-r border-gray-100 last:border-0">
-              <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Destination</label>
+              <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                {searchType === 'hotels' ? 'Destination' : 'Arrival'}
+              </label>
               <PlaceAutocomplete
                 value={destination}
                 onChange={(val, id) => {
                   setDestination(val);
                   setPlaceId(id);
                 }}
-                placeholder="Where to?"
+                placeholder={searchType === 'hotels' ? 'Where to?' : 'Going where?'}
                 className="w-full text-luxury focus:outline-none font-medium bg-transparent"
               />
             </div>
             <div className="px-4 py-2 border-r border-gray-100 last:border-0">
-              <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Check-in</label>
+              <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                {searchType === 'hotels' ? 'Check-in' : 'Departure'}
+              </label>
               <input
                 type="date"
                 value={checkInDate}
@@ -74,16 +117,18 @@ export default function Home() {
                 required
               />
             </div>
-            <div className="px-4 py-2 border-r border-gray-100 last:border-0">
-              <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Check-out</label>
-              <input
-                type="date"
-                value={checkOutDate}
-                onChange={(e) => setCheckOutDate(e.target.value)}
-                className="w-full text-luxury focus:outline-none font-medium"
-                required
-              />
-            </div>
+            {searchType === 'hotels' && (
+              <div className="px-4 py-2 border-r border-gray-100 last:border-0">
+                <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Check-out</label>
+                <input
+                  type="date"
+                  value={checkOutDate}
+                  onChange={(e) => setCheckOutDate(e.target.value)}
+                  className="w-full text-luxury focus:outline-none font-medium"
+                  required
+                />
+              </div>
+            )}
             <button type="submit" className="bg-luxury text-accent px-8 py-4 rounded-xl font-bold hover:bg-black transition-all uppercase tracking-widest text-xs">
               Search
             </button>

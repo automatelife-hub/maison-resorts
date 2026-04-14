@@ -21,9 +21,12 @@ interface HotelData {
 export default function HotelDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [hotelId, setHotelId] = useState('');
   const [hotel, setHotel] = useState<HotelData | null>(null);
+  const [rates, setRates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ratesLoading, setRatesLoading] = useState(false);
   const [error, setError] = useState('');
   const { currency } = usePreferences();
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -42,15 +45,28 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
         if (!response.ok) throw new Error('Failed to fetch hotel');
         const data = await response.json();
         setHotel(data);
+        
+        // Also fetch rates (using dummy dates for now, in prod these come from search)
+        setRatesLoading(true);
+        const ratesRes = await fetch(`/api/hotels/rates?hotelId=${hotelId}&checkInDate=2026-06-01&checkOutDate=2026-06-05&guests=2`);
+        if (ratesRes.ok) {
+          const ratesData = await ratesRes.json();
+          setRates(ratesData.data || []);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load hotel');
       } finally {
         setLoading(false);
+        setRatesLoading(false);
       }
     };
 
     fetchHotel();
   }, [hotelId]);
+
+  const handleBookRate = (rateId: string) => {
+    router.push(`/checkout?hotelId=${hotelId}&rateId=${rateId}`);
+  };
 
   if (loading) {
     return (
@@ -120,14 +136,43 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
 
-        {/* Booking Sidebar */}
-        <div className="card sticky top-4 h-fit">
-          <h2 className="text-2xl font-bold mb-6">Book Your Stay</h2>
-          <div className="space-y-4">
-            <button className="w-full bg-accent text-luxury font-bold py-3 rounded-lg hover:bg-opacity-90 transition-all">
-              Check Availability
-            </button>
-          </div>
+        {/* Booking Sidebar / Rates */}
+        <div className="card sticky top-4 h-fit bg-luxury text-white p-8 rounded-3xl shadow-xl">
+          <h2 className="text-xl font-bold mb-8 italic font-serif">Available <span className="text-accent">Sanctuaries</span></h2>
+          
+          {ratesLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full bg-white/10" />
+              <Skeleton className="h-20 w-full bg-white/10" />
+            </div>
+          ) : rates.length > 0 ? (
+            <div className="space-y-6">
+              {rates.map((room: any) => (
+                <div key={room.room_id} className="border-b border-white/10 pb-6 last:border-0 last:pb-0">
+                  <p className="text-[10px] uppercase tracking-widest text-accent mb-1">{room.room_name}</p>
+                  {room.rates?.map((rate: any) => (
+                    <div key={rate.rate_id} className="flex justify-between items-end mt-2">
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase">{rate.board_type}</p>
+                        <PriceDisplay price={rate.net_rate} currency={rate.currency} className="text-xl font-bold text-white" />
+                      </div>
+                      <button 
+                        onClick={() => handleBookRate(rate.rate_id)}
+                        className="bg-accent text-luxury px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-accent/20"
+                      >
+                        Reserve
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-400 mb-4">No sanctuaries available for these dates.</p>
+              <button className="text-accent text-[10px] uppercase tracking-widest font-bold">Change Dates →</button>
+            </div>
+          )}
         </div>
       </div>
     </div>

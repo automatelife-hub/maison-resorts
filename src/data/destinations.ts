@@ -7,6 +7,8 @@ export interface FeaturedDestination {
   seoKeywords: string[];
   image: string;
   highlights: string[];
+  latitude: number;
+  longitude: number;
 }
 
 export const FEATURED_DESTINATIONS: FeaturedDestination[] = [
@@ -18,7 +20,9 @@ export const FEATURED_DESTINATIONS: FeaturedDestination[] = [
     vibe: 'Barefoot Luxury',
     seoKeywords: ['Albanian Riviera luxury', 'Ksamil hidden gems', 'unvisited Europe coastline'],
     image: 'https://images.unsplash.com/photo-1580220305417-10c036324200?auto=format&fit=crop&q=80&w=1200',
-    highlights: ['Ksamil Islands', 'Butrint UNESCO Site', 'Boutique Eco-Resorts']
+    highlights: ['Ksamil Islands', 'Butrint UNESCO Site', 'Boutique Eco-Resorts'],
+    latitude: 39.8131,
+    longitude: 20.0051
   },
   {
     id: 'pantelleria',
@@ -28,7 +32,9 @@ export const FEATURED_DESTINATIONS: FeaturedDestination[] = [
     vibe: 'Quiet Luxury',
     seoKeywords: ['Pantelleria private villas', 'Dammuso luxury stay', 'Armani retreat Italy'],
     image: 'https://images.unsplash.com/photo-1516483642775-7634f18378d3?auto=format&fit=crop&q=80&w=1200',
-    highlights: ['Mirror of Venus Lake', 'Ancient Dammuso Stays', 'Volcanic Spa Rituals']
+    highlights: ['Mirror of Venus Lake', 'Ancient Dammuso Stays', 'Volcanic Spa Rituals'],
+    latitude: 36.7781,
+    longitude: 11.9891
   },
   {
     id: 'traena-archipelago',
@@ -38,7 +44,9 @@ export const FEATURED_DESTINATIONS: FeaturedDestination[] = [
     vibe: 'Intentional Travel',
     seoKeywords: ['Norway Arctic luxury', 'Træna archipelago coolcation', 'Midnight Sun retreat'],
     image: 'https://images.unsplash.com/photo-1520106212299-d99c443e4568?auto=format&fit=crop&q=80&w=1200',
-    highlights: ['Arctic Design Lodges', 'Skill-Stacking Workshops', 'Midnight Sun Kayaking']
+    highlights: ['Arctic Design Lodges', 'Skill-Stacking Workshops', 'Midnight Sun Kayaking'],
+    latitude: 66.5011,
+    longitude: 12.0981
   },
   {
     id: 'lake-bohinj',
@@ -48,6 +56,8 @@ export const FEATURED_DESTINATIONS: FeaturedDestination[] = [
     vibe: 'Slow Mode',
     seoKeywords: ['Lake Bohinj wellness', 'Slovenia luxury eco-retreat', 'Alps recovery travel'],
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1200',
-    highlights: ['Glacial Forest Bathing', 'Julian Alps Sound Healing', 'Michelin Farm-to-Table']
+    highlights: ['Glacial Forest Bathing', 'Julian Alps Sound Healing', 'Michelin Farm-to-Table'],
+    latitude: 46.2821,
+    longitude: 13.8851
   }
 ];
