@@ -6,6 +6,7 @@ import { FEATURED_DESTINATIONS } from '@/data/destinations';
 import Link from 'next/link';
 import { RecentSearches } from '@/components/RecentSearches';
 import { PlaceAutocomplete } from '@/components/PlaceAutocomplete';
+import { Recommendations } from '@/components/Recommendations';
 
 export default function Home() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function Home() {
   const [placeId, setPlaceId] = useState<string | undefined>();
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
-  const [guests, setGuests] = useState(1);
+  const [occupancies, setOccupancies] = useState<any[]>([{ adults: 1, childrenAges: [] }]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +24,12 @@ export default function Home() {
       destination,
       checkInDate,
       checkOutDate,
-      guests: guests.toString(),
+      occupancies: JSON.stringify(occupancies),
     });
     
     if (searchType === 'flights') {
       params.append('origin', origin);
+      params.append('guests', occupancies.reduce((acc, curr) => acc + curr.adults + (curr.childrenAges?.length || 0), 0).toString());
       router.push(`/flights?${params}`);
     } else {
       if (placeId) params.append('placeId', placeId);
@@ -168,6 +170,13 @@ export default function Home() {
               alt="Coastal view" 
             />
           </div>
+        </div>
+      </section>
+
+      {/* Recommendations Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <Recommendations />
         </div>
       </section>
 

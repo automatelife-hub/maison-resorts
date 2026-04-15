@@ -29,7 +29,8 @@ export function SearchResults() {
   const placeId = searchParams.get('placeId') || undefined;
   const checkInDate = searchParams.get('checkInDate') || '';
   const checkOutDate = searchParams.get('checkOutDate') || '';
-  const guests = searchParams.get('guests') || '1';
+  const guestsParam = searchParams.get('guests');
+  const occupanciesParam = searchParams.get('occupancies');
 
   useEffect(() => {
     if ((!destination && !placeId) || !checkInDate || !checkOutDate) {
@@ -42,6 +43,13 @@ export function SearchResults() {
         setLoading(true);
         setError('');
 
+        let occupancies = [{ adults: 1 }];
+        if (occupanciesParam) {
+          occupancies = JSON.parse(occupanciesParam);
+        } else if (guestsParam) {
+          occupancies = [{ adults: parseInt(guestsParam) }];
+        }
+
         // Call the hotel search API
         const response = await fetch('/api/hotels/search', {
           method: 'POST',
@@ -51,7 +59,7 @@ export function SearchResults() {
             placeId,
             checkInDate,
             checkOutDate,
-            guests: parseInt(guests),
+            occupancies,
             currency,
           }),
         });

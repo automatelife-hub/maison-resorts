@@ -128,12 +128,18 @@ export interface City {
   country_code: string;
 }
 
+export interface RoomOccupancy {
+  adults: number;
+  childrenAges?: number[];
+}
+
 // Search Types
 export interface SearchParams {
   destination: string;
   checkInDate: string;
   checkOutDate: string;
-  guests: number;
+  occupancies: RoomOccupancy[];
+  guests?: number; // legacy support
   currency?: string;
   mode?: 'standard' | 'vibe';
   vibe?: string;
@@ -194,4 +200,37 @@ export interface FlightBookingData {
   totalAmount: number;
   currency: string;
   createdAt: string;
+}
+
+// Flight Ancillary Types
+export interface FlightAncillaries {
+  baggage: BaggageOption[];
+  seats: SeatMap[];
+}
+
+export interface BaggageOption {
+  id: string;
+  type: 'CHECKED' | 'CARRY_ON';
+  weight: number;
+  unit: 'KG' | 'LB';
+  price: number;
+  currency: string;
+}
+
+export interface SeatMap {
+  segmentId: string;
+  rows: SeatRow[];
+}
+
+export interface SeatRow {
+  number: number;
+  seats: Seat[];
+}
+
+export interface Seat {
+  number: string;
+  type: 'WINDOW' | 'AISLE' | 'MIDDLE';
+  isAvailable: boolean;
+  price: number;
+  currency: string;
 }

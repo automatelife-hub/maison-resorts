@@ -10,6 +10,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@stripe/react-stripe-js": "^2.4.0",
+    "@stripe/stripe-js": "^2.4.0",
     "@supabase/supabase-js": "^2.45.0",
     "firebase": "^12.11.0",
     "maplibre-gl": "^4.0.0",

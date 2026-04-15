@@ -6,6 +6,7 @@ import { PromoCodeInput } from '@/components/PromoCodeInput';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { Skeleton } from '@/components/Skeleton';
 import { EmptyState } from '@/components/EmptyState';
+import { LitePayment } from '@/components/LitePayment';
 import { useAuth } from '@/context/AuthContext';
 
 export default function CheckoutPage() {
@@ -20,6 +21,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   
   const [guestDetails, setGuestDetails] = useState({
     name: user?.displayName || '',
@@ -58,9 +60,14 @@ export default function CheckoutPage() {
     fetchPrebook();
   }, [rateId]);
 
-  const handleBooking = async () => {
+  const handlePaymentSuccess = async (id: string) => {
+    setPaymentIntentId(id);
+    await handleBooking(id);
+  };
+
+  const handleBooking = async (piId?: string) => {
     if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
-      alert('Please fill in all guest details');
+      alert('Please fill in all guest details before payment');
       return;
     }
 
@@ -72,13 +79,13 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           prebookId: prebookData.prebookId,
           guestDetails,
+          paymentIntentId: piId,
         }),
       });
 
       if (!response.ok) throw new Error('Booking failed. Please try again.');
       const result = await response.json();
       
-      // Redirect to confirmation with booking ID
       router.push(`/confirmation?bookingId=${result.bookingId}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to complete booking');
@@ -185,49 +192,13 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Secure Payment Simulation */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[10px] uppercase tracking-widest text-accent">Secure Payment</h3>
-              <div className="flex gap-2">
-                <div className="w-8 h-5 bg-gray-100 rounded-sm" />
-                <div className="w-8 h-5 bg-gray-100 rounded-sm" />
-                <div className="w-8 h-5 bg-gray-100 rounded-sm" />
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Card Details</label>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="0000 0000 0000 0000" 
-                    className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all font-mono" 
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">🔒</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Expiry Date</label>
-                  <input 
-                    type="text" 
-                    placeholder="MM / YY" 
-                    className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all font-mono" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">CVC</label>
-                  <input 
-                    type="text" 
-                    placeholder="•••" 
-                    className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all font-mono" 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Real Payment Integration */}
+          <LitePayment 
+            prebookId={prebookData.prebookId}
+            amount={finalTotal}
+            currency={prebookData.currency}
+            onSuccess={handlePaymentSuccess}
+          />
 
           {/* Voucher Section */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">

@@ -14,7 +14,7 @@ export async function searchHotels(
   destination: string, 
   checkInDate: string, 
   checkOutDate: string, 
-  guests: number,
+  occupancies: any[],
   placeId?: string
 ) {
   const body: any = {
@@ -22,7 +22,7 @@ export async function searchHotels(
     checkout: checkOutDate,
     currency: 'USD',
     guestNationality: 'US',
-    occupancies: [{ adults: guests }],
+    occupancies: occupancies,
     includeHotelData: true
   };
 
@@ -76,7 +76,7 @@ export async function getHotelDetails(hotelId: string): Promise<{ data: HotelDat
   };
 }
 
-export async function getHotelRates(hotelId: string, checkInDate: string, checkOutDate: string, guests: number) {
+export async function getHotelRates(hotelId: string, checkInDate: string, checkOutDate: string, occupancies: any[]) {
   const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
     method: 'POST',
     headers,
@@ -86,7 +86,7 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
       checkout: checkOutDate,
       guestNationality: 'US',
       currency: 'USD',
-      occupancies: [{ adults: guests }]
+      occupancies: occupancies
     }),
   });
   if (!response.ok) throw new Error('Failed to get hotel rates');
@@ -187,6 +187,18 @@ export async function prebook(rateId: string) {
   if (!response.ok) throw new Error('Failed to prebook rate');
   const result = await response.json();
   return result.data;
+}
+
+export async function createPaymentIntent(prebookId: string, type: 'hotel' | 'flight' = 'hotel') {
+  const endpoint = type === 'hotel' ? '/payments/intent' : '/flights/payments/intent';
+  const response = await fetch(`${LITEAPI_BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ prebookId }),
+  });
+  if (!response.ok) throw new Error('Failed to create payment intent');
+  const result = await response.json();
+  return result.data; // Should contain clientSecret
 }
 
 export async function book(
@@ -380,11 +392,20 @@ export async function prebookFlight(flightOfferId: string) {
   return result.data;
 }
 
-export async function bookFlight(prebookId: string, passengers: any[]) {
+export async function getFlightAncillaries(flightOfferId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/ancillaries?flightOfferId=${flightOfferId}`, {
+    headers,
+  });
+  if (!response.ok) throw new Error('Failed to fetch flight ancillaries');
+  const result = await response.json();
+  return result.data;
+}
+
+export async function bookFlight(prebookId: string, passengers: any[], ancillaries?: any) {
   const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ prebookId, passengers }),
+    body: JSON.stringify({ prebookId, passengers, ancillaries }),
   });
   if (!response.ok) throw new Error('Failed to book flight');
   const result = await response.json();
@@ -413,4 +434,15 @@ export async function getFlightBooking(bookingId: string) {
   if (!response.ok) throw new Error('Failed to get flight booking');
   const result = await response.json();
   return result.data;
+}
+
+export async function getSmartRecommendations(context?: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/recommendations`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ context, limit: 4 }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch recommendations');
+  const result = await response.json();
+  return result.data || [];
 }

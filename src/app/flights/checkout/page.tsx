@@ -5,8 +5,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { Skeleton } from '@/components/Skeleton';
 import { EmptyState } from '@/components/EmptyState';
+import { AncillarySelection } from '@/components/AncillarySelection';
 import { useAuth } from '@/context/AuthContext';
 import { usePreferences } from '@/context/PreferencesContext';
+import { FlightAncillaries } from '@/types';
 
 export default function FlightCheckoutPage() {
   const searchParams = useSearchParams();
@@ -18,10 +20,15 @@ export default function FlightCheckoutPage() {
   const guestsCount = parseInt(searchParams.get('guests') || '1');
   
   const [prebookData, setPrebookData] = useState<any>(null);
+  const [ancillaries, setAncillaries] = useState<FlightAncillaries | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   
+  const [selectedBaggage, setSelectedBaggage] = useState<string[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<Record<string, string>>({});
+
   const [passengers, setPassengers] = useState<any[]>(
     Array.from({ length: guestsCount }, () => ({
       title: 'Mr',
@@ -41,18 +48,27 @@ export default function FlightCheckoutPage() {
       return;
     }
 
-    const fetchPrebook = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/flights/prebook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ flightOfferId }),
-        });
+        const [prebookRes, ancillariesRes] = await Promise.all([
+          fetch('/api/flights/prebook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ flightOfferId }),
+          }),
+          fetch(`/api/flights/ancillaries?flightOfferId=${flightOfferId}`)
+        ]);
         
-        if (!response.ok) throw new Error('The selected voyage is no longer available. Please select another flight.');
-        const data = await response.json();
-        setPrebookData(data);
+        if (!prebookRes.ok) throw new Error('The selected voyage is no longer available.');
+        
+        const prebookData = await prebookRes.json();
+        setPrebookData(prebookData);
+
+        if (ancillariesRes.ok) {
+          const ancillariesData = await ancillariesRes.ok ? await ancillariesRes.json() : null;
+          setAncillaries(ancillariesData);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize booking');
       } finally {
@@ -60,7 +76,7 @@ export default function FlightCheckoutPage() {
       }
     };
 
-    fetchPrebook();
+    fetchData();
   }, [flightOfferId]);
 
   const handlePassengerChange = (index: number, field: string, value: string) => {
@@ -69,11 +85,16 @@ export default function FlightCheckoutPage() {
     setPassengers(updatedPassengers);
   };
 
-  const handleBooking = async () => {
+  const handlePaymentSuccess = async (id: string) => {
+    setPaymentIntentId(id);
+    await handleBooking(id);
+  };
+
+  const handleBooking = async (piId?: string) => {
     // Basic validation
     for (const p of passengers) {
       if (!p.firstName || !p.lastName || !p.dateOfBirth || !p.passportNumber) {
-        alert('Please fill in all passenger details');
+        alert('Please fill in all passenger details before payment');
         return;
       }
     }
@@ -86,6 +107,11 @@ export default function FlightCheckoutPage() {
         body: JSON.stringify({
           prebookId: prebookData.prebookId,
           passengers,
+          paymentIntentId: piId,
+          ancillaries: {
+            baggageIds: selectedBaggage,
+            seats: Object.entries(selectedSeats).map(([segmentId, seatNumber]) => ({ segmentId, seatNumber }))
+          }
         }),
       });
 
@@ -127,6 +153,19 @@ export default function FlightCheckoutPage() {
       </div>
     );
   }
+
+  const baggageTotal = selectedBaggage.reduce((acc, id) => {
+    const option = ancillaries?.baggage.find(b => b.id === id);
+    return acc + (option?.price || 0);
+  }, 0);
+
+  const seatTotal = Object.entries(selectedSeats).reduce((acc, [segId, seatNum]) => {
+    const segment = ancillaries?.seats.find(s => s.segmentId === segId);
+    const seat = segment?.rows.flatMap(r => row.seats).find(s => s.number === seatNum);
+    return acc + (seat?.price || 0);
+  }, 0);
+
+  const finalTotal = prebookData.selling_rate + baggageTotal + seatTotal;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
@@ -244,33 +283,25 @@ export default function FlightCheckoutPage() {
             ))}
           </div>
 
-          {/* Secure Payment Simulation */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <h3 className="text-[10px] uppercase tracking-widest text-accent mb-6">Payment Method</h3>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Card Details</label>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="0000 0000 0000 0000" 
-                    className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all font-mono" 
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">🔒</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Expiry</label>
-                  <input type="text" placeholder="MM / YY" className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">CVC</label>
-                  <input type="text" placeholder="•••" className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all" />
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Ancillaries */}
+          {ancillaries && (
+            <AncillarySelection 
+              ancillaries={ancillaries}
+              selectedBaggage={selectedBaggage}
+              selectedSeats={selectedSeats}
+              onBaggageChange={setSelectedBaggage}
+              onSeatChange={(segId, seatNum) => setSelectedSeats({...selectedSeats, [segId]: seatNum})}
+            />
+          )}
+
+          {/* Real Payment Integration */}
+          <LitePayment 
+            prebookId={prebookData.prebookId}
+            type="flight"
+            amount={finalTotal}
+            currency={prebookData.currency}
+            onSuccess={handlePaymentSuccess}
+          />
         </div>
 
         {/* Sidebar Summary */}
@@ -283,6 +314,18 @@ export default function FlightCheckoutPage() {
                 <span className="text-gray-400">Voyage Total</span>
                 <PriceDisplay price={prebookData.selling_rate} currency={prebookData.currency} className="text-white font-medium" />
               </div>
+              {baggageTotal > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Extra Baggage</span>
+                  <PriceDisplay price={baggageTotal} currency={prebookData.currency} className="text-white" />
+                </div>
+              )}
+              {seatTotal > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Seat Selection</span>
+                  <PriceDisplay price={seatTotal} currency={prebookData.currency} className="text-white" />
+                </div>
+              )}
               <div className="flex justify-between items-center text-sm text-gray-400">
                 <span>Voyagers</span>
                 <span className="text-white">{guestsCount}</span>
@@ -296,7 +339,7 @@ export default function FlightCheckoutPage() {
             <div className="space-y-8">
               <div className="flex justify-between items-end">
                 <span className="text-gray-400 text-[10px] uppercase tracking-[0.2em]">Final Amount</span>
-                <PriceDisplay price={prebookData.selling_rate} currency={prebookData.currency} className="text-3xl font-bold text-accent font-serif" />
+                <PriceDisplay price={finalTotal} currency={prebookData.currency} className="text-3xl font-bold text-accent font-serif" />
               </div>
               
               <button 
