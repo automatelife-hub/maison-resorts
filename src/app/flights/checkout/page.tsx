@@ -161,7 +161,7 @@ export default function FlightCheckoutPage() {
 
   const seatTotal = Object.entries(selectedSeats).reduce((acc, [segId, seatNum]) => {
     const segment = ancillaries?.seats.find(s => s.segmentId === segId);
-    const seat = segment?.rows.flatMap(r => row.seats).find(s => s.number === seatNum);
+    const seat = segment?.rows.flatMap(r => r.seats).find(s => s.number === seatNum);
     return acc + (seat?.price || 0);
   }, 0);
 
