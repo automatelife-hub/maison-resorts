@@ -72,24 +72,43 @@ export default function BookingsPage() {
         <div className="space-y-8">
           {bookings.map((booking) => (
             <div key={booking.id} className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 hover:shadow-xl transition-all flex flex-col md:flex-row gap-8">
-              <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden rounded-2xl">
-                <img 
-                  src={booking.hotelPhoto || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800'} 
-                  className="w-full h-full object-cover"
-                  alt={booking.hotelName}
-                />
+              <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden rounded-2xl bg-gray-50 flex items-center justify-center">
+                {booking.type === 'flight' ? (
+                  <div className="text-4xl text-accent opacity-20">✈️</div>
+                ) : (
+                  <img 
+                    src={booking.hotelPhoto || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800'} 
+                    className="w-full h-full object-cover"
+                    alt={booking.hotelName}
+                  />
+                )}
                 <div className="absolute top-4 left-4">
                   <Badge variant={booking.status === 'confirmed' ? 'success' : 'warning'}>
                     {booking.status?.toUpperCase()}
                   </Badge>
                 </div>
+                {booking.type === 'flight' && (
+                  <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-[8px] font-bold tracking-widest text-luxury">
+                    VOYAGE
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 space-y-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-2xl font-bold text-luxury mb-1">{booking.hotelName || 'Maison Sanctuary'}</h2>
-                    <p className="text-gray-500 text-sm uppercase tracking-widest">{booking.city}, {booking.countryCode}</p>
+                    <h2 className="text-2xl font-bold text-luxury mb-1">
+                      {booking.type === 'flight' 
+                        ? `${booking.origin} to ${booking.destination}`
+                        : (booking.hotelName || 'Maison Sanctuary')
+                      }
+                    </h2>
+                    <p className="text-gray-500 text-sm uppercase tracking-widest">
+                      {booking.type === 'flight'
+                        ? booking.airline
+                        : `${booking.city}, ${booking.countryCode}`
+                      }
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Total Paid</p>
@@ -99,16 +118,28 @@ export default function BookingsPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-6 border-y border-gray-50">
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Check-in</p>
-                    <p className="font-bold text-luxury">{booking.checkin}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                      {booking.type === 'flight' ? 'Departure' : 'Check-in'}
+                    </p>
+                    <p className="font-bold text-luxury">
+                      {booking.type === 'flight' ? booking.departureTime : booking.checkin}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Check-out</p>
-                    <p className="font-bold text-luxury">{booking.checkout}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                      {booking.type === 'flight' ? 'Arrival' : 'Check-out'}
+                    </p>
+                    <p className="font-bold text-luxury">
+                      {booking.type === 'flight' ? booking.arrivalTime : booking.checkout}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Room</p>
-                    <p className="text-sm text-gray-600 truncate">{booking.roomType}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                      {booking.type === 'flight' ? 'Class' : 'Room'}
+                    </p>
+                    <p className="text-sm text-gray-600 truncate">
+                      {booking.type === 'flight' ? booking.cabinClass : booking.roomType}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Reference</p>

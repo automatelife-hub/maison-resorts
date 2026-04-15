@@ -379,3 +379,38 @@ export async function prebookFlight(flightOfferId: string) {
   const result = await response.json();
   return result.data;
 }
+
+export async function bookFlight(prebookId: string, passengers: any[]) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ prebookId, passengers }),
+  });
+  if (!response.ok) throw new Error('Failed to book flight');
+  const result = await response.json();
+  return result.data;
+}
+
+export async function cancelFlight(bookingId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings/${bookingId}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!response.ok) throw new Error('Failed to cancel flight');
+  const result = await response.json();
+  return result.data;
+}
+
+export async function listFlightBookings() {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings`, { headers });
+  if (!response.ok) throw new Error('Failed to list flight bookings');
+  const result = await response.json();
+  return result.data || [];
+}
+
+export async function getFlightBooking(bookingId: string) {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings/${bookingId}`, { headers });
+  if (!response.ok) throw new Error('Failed to get flight booking');
+  const result = await response.json();
+  return result.data;
+}

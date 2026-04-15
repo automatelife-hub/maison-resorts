@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/Skeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -9,6 +9,7 @@ import { usePreferences } from '@/context/PreferencesContext';
 
 export default function FlightsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { currency } = usePreferences();
   const [flights, setFlights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,10 @@ export default function FlightsPage() {
 
     fetchFlights();
   }, [origin, destination, departureDate, guests, currency]);
+
+  const handleSelect = (flightId: string) => {
+    router.push(`/flights/checkout?flightOfferId=${flightId}&guests=${guests}`);
+  };
 
   if (loading) {
     return (
@@ -118,7 +123,10 @@ export default function FlightsPage() {
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">{flight.cabinClass || 'ECONOMY'}</p>
                 <PriceDisplay price={flight.price} currency={currency} className="text-2xl font-bold text-luxury" />
               </div>
-              <button className="bg-luxury text-accent px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-luxury/10">
+              <button 
+                onClick={() => handleSelect(flight.id)}
+                className="bg-luxury text-accent px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-luxury/10"
+              >
                 Select
               </button>
             </div>

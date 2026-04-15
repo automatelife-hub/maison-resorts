@@ -149,3 +149,49 @@ export interface SearchFilter {
   boardTypes?: string[];
   sortBy?: 'price_asc' | 'price_desc' | 'rating' | 'name';
 }
+
+// Flight Types
+export interface FlightOffer {
+  id: string;
+  airline: string;
+  airlineLogo?: string;
+  departureTime: string;
+  arrivalTime: string;
+  origin: string;
+  destination: string;
+  duration: string;
+  price: number;
+  currency: string;
+  cabinClass: 'ECONOMY' | 'PREMIUM_ECONOMY' | 'BUSINESS' | 'FIRST';
+  segments: FlightSegment[];
+}
+
+export interface FlightSegment {
+  departureTime: string;
+  arrivalTime: string;
+  origin: string;
+  destination: string;
+  airline: string;
+  flightNumber: string;
+}
+
+export interface Passenger {
+  title: 'Mr' | 'Ms' | 'Mrs' | 'Miss';
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: 'M' | 'F';
+  nationality: string;
+  passportNumber: string;
+  passportExpiry?: string;
+}
+
+export interface FlightBookingData {
+  id: string;
+  flightOfferId: string;
+  status: 'confirmed' | 'pending' | 'cancelled';
+  passengers: Passenger[];
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+}
