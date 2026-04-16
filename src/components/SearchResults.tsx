@@ -8,6 +8,7 @@ import { StarRating } from '@/components/StarRating';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { usePreferences } from '@/context/PreferencesContext';
 import { SearchFilters } from '@/components/SearchFilters';
+import { FavoriteButton } from '@/components/FavoriteButton';
 import type { SearchFilter } from '@/types';
 import Link from 'next/link';
 
@@ -193,6 +194,15 @@ export function SearchResults() {
                       <div className="absolute top-6 left-6">
                          <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm">
                            <StarRating rating={hotel.star_rating} size="xs" />
+                         </div>
+                      </div>
+                      <div className="absolute top-6 right-6">
+                         <div className="bg-white/90 backdrop-blur-md p-1 rounded-full shadow-sm">
+                           <FavoriteButton 
+                             hotelId={hotel.id} 
+                             hotelName={hotel.name} 
+                             hotelPhoto={hotel.photo} 
+                           />
                          </div>
                       </div>
                     </div>

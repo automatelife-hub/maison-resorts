@@ -156,8 +156,8 @@ export async function semanticSearch(vibe: string, destination: string) {
     headers,
     body: JSON.stringify({
       aiSearch: `${vibe} hotels in ${destination}`,
-      checkin: new Date().toISOString().split('T')[0], // dummy dates for search
-      checkout: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      checkin: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0], // 14 days out
+      checkout: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0], // 15 days out
       currency: 'USD',
       guestNationality: 'US',
       occupancies: [{ adults: 2 }],

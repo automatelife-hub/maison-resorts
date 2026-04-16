@@ -10,6 +10,7 @@ import Link from 'next/link';
 interface FavoriteItem {
   hotelId: string;
   hotelName: string;
+  hotelPhoto?: string;
   createdAt: string;
 }
 
@@ -102,7 +103,7 @@ export default function FavoritesPage() {
               <DestinationCard
                 countryCode=""
                 countryName={fav.hotelName}
-                image="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800" // Placeholder image for now
+                image={fav.hotelPhoto || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800"} 
               />
               <div className="px-2 flex justify-between items-center">
                 <div>

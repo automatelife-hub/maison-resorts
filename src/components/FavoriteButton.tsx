@@ -6,10 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 interface FavoriteButtonProps {
   hotelId: string;
   hotelName: string;
+  hotelPhoto?: string;
   onToggle?: (isFavorite: boolean) => void;
 }
 
-export function FavoriteButton({ hotelId, hotelName, onToggle }: FavoriteButtonProps) {
+export function FavoriteButton({ hotelId, hotelName, hotelPhoto, onToggle }: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -35,6 +36,7 @@ export function FavoriteButton({ hotelId, hotelName, onToggle }: FavoriteButtonP
 
   const handleToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!user) {
       // In a real app, you might want to redirect to login or show a toast
       return;
@@ -50,7 +52,7 @@ export function FavoriteButton({ hotelId, hotelName, onToggle }: FavoriteButtonP
       const docRef = doc(db, `users/${user.uid}/favorites`, hotelId);
       
       if (newState) {
-        await setDoc(docRef, { hotelId, hotelName, createdAt: new Date().toISOString() });
+        await setDoc(docRef, { hotelId, hotelName, hotelPhoto, createdAt: new Date().toISOString() });
       } else {
         await deleteDoc(docRef);
       }

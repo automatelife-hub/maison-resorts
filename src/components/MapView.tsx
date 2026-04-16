@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface Hotel {
   id: string;
@@ -16,41 +18,63 @@ interface MapViewProps {
 }
 
 export function MapView({ hotels, onHotelSelect }: MapViewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || hotels.length === 0) return;
+    if (!mapContainerRef.current) return;
 
-    // Placeholder for maplibre-gl integration
-    const bounds = hotels.reduce(
-      (acc, hotel) => ({
-        north: Math.max(acc.north, hotel.latitude),
-        south: Math.min(acc.south, hotel.latitude),
-        east: Math.max(acc.east, hotel.longitude),
-        west: Math.min(acc.west, hotel.longitude),
-      }),
-      {
-        north: hotels[0].latitude,
-        south: hotels[0].latitude,
-        east: hotels[0].longitude,
-        west: hotels[0].longitude,
+    // Initialize map
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: 'https://demotiles.maplibre.org/style.json', // Basic style, in prod use a luxury theme
+      center: hotels.length > 0 ? [hotels[0].longitude, hotels[0].latitude] : [0, 0],
+      zoom: hotels.length > 0 ? 12 : 1,
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current || hotels.length === 0) return;
+
+    const map = mapRef.current;
+    
+    // Remove existing markers if any
+    const currentMarkers = document.querySelectorAll('.maplibregl-marker');
+    currentMarkers.forEach(m => m.remove());
+
+    const bounds = new maplibregl.LngLatBounds();
+
+    hotels.forEach((hotel) => {
+      if (hotel.longitude && hotel.latitude) {
+        const marker = new maplibregl.Marker({ color: '#1a1a1a' })
+          .setLngLat([hotel.longitude, hotel.latitude])
+          .setPopup(new maplibregl.Popup().setHTML(`<div style="padding: 10px; font-family: serif;"><strong>${hotel.name}</strong></div>`))
+          .addTo(map);
+        
+        marker.getElement().addEventListener('click', () => {
+          onHotelSelect?.(hotel.id);
+        });
+
+        bounds.extend([hotel.longitude, hotel.latitude]);
       }
-    );
+    });
 
-    containerRef.current.innerHTML = `
-      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-600">
-        <div>
-          <p className="text-lg font-semibold mb-2">Map View</p>
-          <p className="text-sm">${hotels.length} hotels found</p>
-        </div>
-      </div>
-    `;
-  }, [hotels]);
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+    }
+  }, [hotels, onHotelSelect]);
 
   return (
     <div
-      ref={containerRef}
-      className="w-full h-96 rounded-lg shadow-md bg-gray-100"
+      ref={mapContainerRef}
+      className="w-full h-96 rounded-[2rem] shadow-2xl bg-gray-100 overflow-hidden border border-gray-100"
     />
   );
 }
