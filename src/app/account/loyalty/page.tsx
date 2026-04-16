@@ -10,6 +10,7 @@ export default function LoyaltyPage() {
   const { user, loading: authLoading } = useAuth();
   const [loyaltyData, setLoyaltyData] = useState<any>(null);
   const [vouchers, setVouchers] = useState<any[]>([]);
+  const [globalVouchers, setGlobalVouchers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,20 +24,38 @@ export default function LoyaltyPage() {
     const fetchLoyalty = async () => {
       try {
         setLoading(true);
+        
+        // Fetch from API routes in parallel
+        const [loyaltyRes, globalVouchersRes] = await Promise.all([
+          fetch(`/api/loyalty?guestId=${user.uid}`),
+          fetch('/api/vouchers')
+        ]);
+
+        if (loyaltyRes.ok) {
+          const apiLoyaltyData = await loyaltyRes.json();
+          // Merge or prefer API data if available
+          setLoyaltyData((prev: any) => ({ ...prev, ...apiLoyaltyData }));
+        }
+
+        if (globalVouchersRes.ok) {
+          const apiGlobalVouchers = await globalVouchersRes.json();
+          setGlobalVouchers(apiGlobalVouchers.data || []);
+        }
+
         const { getFirebaseFirestore } = await import('@/lib/firebase');
         const { doc, getDoc, collection, getDocs } = await import('firebase/firestore');
         const db = await getFirebaseFirestore();
 
-        // Fetch loyalty info
+        // Fetch loyalty info from Firestore
         const loyaltyRef = doc(db, `users/${user.uid}/loyalty`, 'status');
         const loyaltySnap = await getDoc(loyaltyRef);
         if (loyaltySnap.exists()) {
-          setLoyaltyData(loyaltySnap.data());
-        } else {
+          setLoyaltyData((prev: any) => ({ ...prev, ...loyaltySnap.data() }));
+        } else if (!loyaltyData) {
           setLoyaltyData({ points: 0, tier: 'Heritage Member' });
         }
 
-        // Fetch user vouchers
+        // Fetch user vouchers from Firestore
         const vouchersRef = collection(db, `users/${user.uid}/vouchers`);
         const vouchersSnap = await getDocs(vouchersRef);
         const fetchedVouchers: any[] = [];
@@ -46,7 +65,7 @@ export default function LoyaltyPage() {
         setVouchers(fetchedVouchers);
         
       } catch (err) {
-        console.error('Failed to load loyalty info from Firestore', err);
+        console.error('Failed to load loyalty info', err);
       } finally {
         setLoading(false);
       }
@@ -129,7 +148,7 @@ export default function LoyaltyPage() {
 
       {/* Vouchers Section */}
       <div className="mb-16">
-        <h2 className="text-2xl font-bold text-luxury mb-8 italic font-serif">Exclusive <span className="text-accent">Vouchers</span></h2>
+        <h2 className="text-2xl font-bold text-luxury mb-8 italic font-serif">Your <span className="text-accent">Vouchers</span></h2>
         {vouchers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vouchers.map((v) => (
@@ -150,7 +169,38 @@ export default function LoyaltyPage() {
           </div>
         ) : (
           <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
-            <p className="text-gray-400 text-sm">No vouchers available at this moment. Stays at our 2026 niche spots will unlock exclusive rewards.</p>
+            <p className="text-gray-400 text-sm">No personal vouchers available at this moment.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Global Offers Section */}
+      <div className="mb-16">
+        <h2 className="text-2xl font-bold text-luxury mb-8 italic font-serif">Global <span className="text-accent">Offers</span></h2>
+        {globalVouchers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {globalVouchers.map((v: any, idx: number) => (
+              <div key={v.id || idx} className="bg-gray-50 border border-gray-100 rounded-3xl p-8 relative group hover:bg-white hover:shadow-xl transition-all">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="bg-luxury text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    PROMO
+                  </div>
+                  <span className="text-[10px] font-mono text-gray-400">{v.code || 'LIMITED'}</span>
+                </div>
+                <h3 className="font-bold text-luxury mb-2">{v.name || 'Seasonal Special'}</h3>
+                <p className="text-xs text-gray-500 mb-6">{v.description || 'Exclusive access to our newest collection.'}</p>
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200/50">
+                  <span className="text-xl font-bold text-accent">{v.value ? (v.discountType === 'percentage' ? `${v.value}%` : `$${v.value}`) : 'Varies'}</span>
+                  <button className="text-[10px] uppercase tracking-widest font-bold text-luxury">
+                    Details →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <p className="text-gray-400 text-sm">Check back later for seasonal Maison offers.</p>
           </div>
         )}
       </div>
