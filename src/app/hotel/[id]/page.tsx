@@ -8,6 +8,7 @@ import { StarRating } from '@/components/StarRating';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { usePreferences } from '@/context/PreferencesContext';
 import { SentimentDisplay } from '@/components/SentimentDisplay';
+import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface HotelData {
   id: string;
@@ -41,9 +42,11 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
         const data = await response.json();
         setHotel(data);
         
-        // Also fetch rates (using dummy dates for now, in prod these come from search)
+        // Also fetch rates (using dynamic dates 2 weeks out)
         setRatesLoading(true);
-        const ratesRes = await fetch(`/api/hotels/rates?hotelId=${hotelId}&checkInDate=2026-06-01&checkOutDate=2026-06-05&guests=2`);
+        const checkIn = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+        const checkOut = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+        const ratesRes = await fetch(`/api/hotels/rates?hotelId=${hotelId}&checkInDate=${checkIn}&checkOutDate=${checkOut}&guests=2`);
         if (ratesRes.ok) {
           const ratesData = await ratesRes.json();
           setRates(ratesData.data || []);
@@ -112,7 +115,16 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
              </div>
              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-accent">Heritage Sanctuaries</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-4 italic font-serif tracking-tighter">{hotel.name}</h1>
+          <div className="flex justify-between items-start gap-8">
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 italic font-serif tracking-tighter">{hotel.name}</h1>
+            <div className="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/20">
+              <FavoriteButton 
+                hotelId={hotel.id} 
+                hotelName={hotel.name} 
+                hotelPhoto={hotel.photo} 
+              />
+            </div>
+          </div>
           <p className="text-xl text-gray-200 font-light tracking-wide">{hotel.city} — European Niche Collection 2026</p>
         </div>
       </div>

@@ -167,34 +167,33 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Full Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={guestDetails.name}
                   onChange={(e) => setGuestDetails({...guestDetails, name: e.target.value})}
-                  placeholder="John Doe" 
-                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all" 
+                  placeholder="E.g. Alexander Sterling"
+                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all"
                 />
-              </div>
-              <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Email Address</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={guestDetails.email}
                   onChange={(e) => setGuestDetails({...guestDetails, email: e.target.value})}
-                  placeholder="john@example.com" 
-                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all" 
+                  placeholder="alexander@maison-resorts.com"
+                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all"
                 />
-              </div>
-              <div className="space-y-2 md:col-span-2">
+                </div>
+                <div className="space-y-2 md:col-span-2">
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Phone Number</label>
-                <input 
-                  type="tel" 
+                <input
+                  type="tel"
                   value={guestDetails.phone}
                   onChange={(e) => setGuestDetails({...guestDetails, phone: e.target.value})}
-                  placeholder="+1 (555) 000-0000" 
-                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all" 
-                />
-              </div>
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all"
+                />              </div>
             </div>
           </div>
 
