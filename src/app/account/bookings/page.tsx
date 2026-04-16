@@ -13,21 +13,32 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading || !user) {
-      if (!authLoading) setLoading(false);
+    if (authLoading) return;
+    
+    if (!user) {
+      setLoading(false);
       return;
     }
 
     const fetchBookings = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/bookings');
-        if (response.ok) {
-          const data = await response.json();
-          setBookings(data || []);
-        }
+        const { getFirebaseFirestore } = await import('@/lib/firebase');
+        const { collection, getDocs, query, orderBy } = await import('firebase/firestore');
+        const db = await getFirebaseFirestore();
+        
+        const bookingsRef = collection(db, `users/${user.uid}/bookings`);
+        const q = query(bookingsRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedBookings: any[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedBookings.push({ id: doc.id, ...doc.data() });
+        });
+        
+        setBookings(fetchedBookings);
       } catch (err) {
-        console.error('Failed to load bookings', err);
+        console.error('Failed to fetch bookings from Firestore', err);
       } finally {
         setLoading(false);
       }
@@ -79,12 +90,12 @@ export default function BookingsPage() {
                   <img 
                     src={booking.hotelPhoto || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800'} 
                     className="w-full h-full object-cover"
-                    alt={booking.hotelName}
+                    alt={booking.hotelName || 'Sanctuary'}
                   />
                 )}
                 <div className="absolute top-4 left-4">
                   <Badge variant={booking.status === 'confirmed' ? 'success' : 'warning'}>
-                    {booking.status?.toUpperCase()}
+                    {(booking.status || 'confirmed').toUpperCase()}
                   </Badge>
                 </div>
                 {booking.type === 'flight' && (
@@ -106,13 +117,13 @@ export default function BookingsPage() {
                     <p className="text-gray-500 text-sm uppercase tracking-widest">
                       {booking.type === 'flight'
                         ? booking.airline
-                        : `${booking.city}, ${booking.countryCode}`
+                        : `${booking.city || 'Undisclosed'}, ${booking.countryCode || 'Region'}`
                       }
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Total Paid</p>
-                    <PriceDisplay price={booking.totalPrice} currency={booking.currency} className="text-xl font-bold text-luxury" />
+                    <PriceDisplay price={booking.total_amount || booking.totalPrice || 0} currency={booking.currency || 'USD'} className="text-xl font-bold text-luxury" />
                   </div>
                 </div>
 
@@ -122,7 +133,7 @@ export default function BookingsPage() {
                       {booking.type === 'flight' ? 'Departure' : 'Check-in'}
                     </p>
                     <p className="font-bold text-luxury">
-                      {booking.type === 'flight' ? booking.departureTime : booking.checkin}
+                      {booking.type === 'flight' ? booking.departureTime : booking.check_in_date || booking.checkin || 'N/A'}
                     </p>
                   </div>
                   <div>
@@ -130,7 +141,7 @@ export default function BookingsPage() {
                       {booking.type === 'flight' ? 'Arrival' : 'Check-out'}
                     </p>
                     <p className="font-bold text-luxury">
-                      {booking.type === 'flight' ? booking.arrivalTime : booking.checkout}
+                      {booking.type === 'flight' ? booking.arrivalTime : booking.check_out_date || booking.checkout || 'N/A'}
                     </p>
                   </div>
                   <div>
@@ -138,12 +149,12 @@ export default function BookingsPage() {
                       {booking.type === 'flight' ? 'Class' : 'Room'}
                     </p>
                     <p className="text-sm text-gray-600 truncate">
-                      {booking.type === 'flight' ? booking.cabinClass : booking.roomType}
+                      {booking.type === 'flight' ? booking.cabinClass : booking.roomType || 'Maison Suite'}
                     </p>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Reference</p>
-                    <p className="text-sm font-mono text-gray-600">{booking.id}</p>
+                    <p className="text-sm font-mono text-gray-600">{booking.bookingId || booking.id}</p>
                   </div>
                 </div>
 

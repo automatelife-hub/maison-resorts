@@ -13,29 +13,40 @@ export default function LoyaltyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading || !user) {
-      if (!authLoading) setLoading(false);
+    if (authLoading) return;
+    
+    if (!user) {
+      setLoading(false);
       return;
     }
 
     const fetchLoyalty = async () => {
       try {
         setLoading(true);
+        const { getFirebaseFirestore } = await import('@/lib/firebase');
+        const { doc, getDoc, collection, getDocs } = await import('firebase/firestore');
+        const db = await getFirebaseFirestore();
+
         // Fetch loyalty info
-        const loyaltyRes = await fetch(`/api/loyalty?guestId=${user.uid}`);
-        if (loyaltyRes.ok) {
-          const data = await loyaltyRes.json();
-          setLoyaltyData(data);
+        const loyaltyRef = doc(db, `users/${user.uid}/loyalty`, 'status');
+        const loyaltySnap = await getDoc(loyaltyRef);
+        if (loyaltySnap.exists()) {
+          setLoyaltyData(loyaltySnap.data());
+        } else {
+          setLoyaltyData({ points: 0, tier: 'Heritage Member' });
         }
 
         // Fetch user vouchers
-        const vouchersRes = await fetch(`/api/vouchers?guestId=${user.uid}`);
-        if (vouchersRes.ok) {
-          const data = await vouchersRes.json();
-          setVouchers(data.vouchers || []);
-        }
+        const vouchersRef = collection(db, `users/${user.uid}/vouchers`);
+        const vouchersSnap = await getDocs(vouchersRef);
+        const fetchedVouchers: any[] = [];
+        vouchersSnap.forEach((doc) => {
+          fetchedVouchers.push({ id: doc.id, ...doc.data() });
+        });
+        setVouchers(fetchedVouchers);
+        
       } catch (err) {
-        console.error('Failed to load loyalty info', err);
+        console.error('Failed to load loyalty info from Firestore', err);
       } finally {
         setLoading(false);
       }
@@ -95,7 +106,7 @@ export default function LoyaltyPage() {
         <div className="bg-white rounded-[2rem] p-10 shadow-sm border border-gray-100 flex flex-col justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-8">Status Level</p>
-            <h2 className="text-3xl font-bold text-luxury italic font-serif mb-2">Heritage Member</h2>
+            <h2 className="text-3xl font-bold text-luxury italic font-serif mb-2">{loyaltyData?.tier || 'Heritage Member'}</h2>
             <p className="text-xs text-gray-500 mb-8">You are <span className="text-luxury font-bold">1,250 pts</span> away from the "Sanctuary" tier.</p>
           </div>
           <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">

@@ -2,6 +2,7 @@
 let _auth: any = null;
 let _googleProvider: any = null;
 let _analytics: any = null;
+let _firestore: any = null;
 
 const getFirebaseConfig = () => ({
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -25,6 +26,14 @@ export async function getFirebaseAuth() {
   const app = await getFirebaseApp();
   _auth = getAuth(app);
   return _auth;
+}
+
+export async function getFirebaseFirestore() {
+  if (_firestore) return _firestore;
+  const { getFirestore } = await import('firebase/firestore');
+  const app = await getFirebaseApp();
+  _firestore = getFirestore(app);
+  return _firestore;
 }
 
 export async function getGoogleProvider() {

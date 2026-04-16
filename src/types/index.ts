@@ -9,6 +9,7 @@ export interface HotelData {
   description?: string;
   latitude?: number;
   longitude?: number;
+  amenities?: string[];
 }
 
 // Rate Types

@@ -80,6 +80,12 @@ export default function CheckoutPage() {
           prebookId: prebookData.prebookId,
           guestDetails,
           paymentIntentId: piId,
+          uid: user?.uid || null,
+          hotelName: prebookData.hotelName || 'Maison Retreat',
+          checkin: prebookData.checkin,
+          checkout: prebookData.checkout,
+          sellingRate: prebookData.selling_rate,
+          currency: prebookData.currency
         }),
       });
 
@@ -238,7 +244,7 @@ export default function CheckoutPage() {
               </div>
               
               <button 
-                onClick={handleBooking}
+                onClick={() => handleBooking()}
                 disabled={isBooking}
                 className="w-full bg-accent text-luxury font-bold py-4 rounded-xl hover:bg-white transition-all uppercase tracking-widest text-xs shadow-lg shadow-accent/20 disabled:opacity-50"
               >

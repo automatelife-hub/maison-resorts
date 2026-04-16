@@ -46,11 +46,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe?.();
   }, []);
 
+  const initializeUserInFirestore = async (uid: string, email: string | null, name: string | null) => {
+    try {
+      const { getFirebaseFirestore } = await import('@/lib/firebase');
+      const { doc, setDoc } = await import('firebase/firestore');
+      const db = await getFirebaseFirestore();
+      
+      // Initialize basic user profile
+      await setDoc(doc(db, `users/${uid}`), {
+        email,
+        name,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Initialize loyalty account with 500 welcome points
+      await setDoc(doc(db, `users/${uid}/loyalty`, 'status'), {
+        points: 500,
+        tier: 'Heritage Member',
+        joinedAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Give a welcome voucher
+      await setDoc(doc(db, `users/${uid}/vouchers`, 'WELCOME2026'), {
+        code: 'WELCOME2026',
+        name: 'Welcome Voyage',
+        description: 'Enjoy a special welcome discount on your first sanctuary booking in 2026.',
+        discountType: 'fixed',
+        value: 100,
+        currency: 'USD',
+        status: 'available',
+        expiry: '2026-12-31'
+      }, { merge: true });
+    } catch (err) {
+      console.error('Failed to initialize user in Firestore', err);
+    }
+  };
+
   const signInWithGoogle = async () => {
     const { getFirebaseAuth, getGoogleProvider } = await import('@/lib/firebase');
     const { signInWithPopup } = await import('firebase/auth');
     const [auth, provider] = await Promise.all([getFirebaseAuth(), getGoogleProvider()]);
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    
+    // Check if new user
+    const { getAdditionalUserInfo } = await import('firebase/auth');
+    const additionalInfo = getAdditionalUserInfo(result);
+    if (additionalInfo?.isNewUser) {
+      await initializeUserInFirestore(result.user.uid, result.user.email, result.user.displayName);
+    }
   };
 
   const signIn = async (email: string, pass: string) => {
@@ -65,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
     if (result.user) {
       await updateProfile(result.user, { displayName: name });
+      await initializeUserInFirestore(result.user.uid, email, name);
     }
     return result;
   };

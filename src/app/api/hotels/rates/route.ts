@@ -12,7 +12,8 @@ export async function GET(request: Request) {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    const rates = await getHotelRates(hotelId, checkInDate, checkOutDate, guests);
+    const occupancies = [{ adults: guests }];
+    const rates = await getHotelRates(hotelId, checkInDate, checkOutDate, occupancies);
     return Response.json(rates);
   } catch (error) {
     return Response.json(

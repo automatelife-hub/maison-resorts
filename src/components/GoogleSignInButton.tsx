@@ -8,8 +8,8 @@ export function GoogleSignInButton() {
   if (loading) return <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />;
 
   if (user) {
-    const displayName = user.user_metadata?.full_name || user.email?.split('@')[0];
-    const photoURL = user.user_metadata?.avatar_url;
+    const displayName = user.displayName || user.email?.split('@')[0];
+    const photoURL = user.photoURL;
 
     return (
       <div className="flex items-center gap-2">

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { RecentSearches } from '@/components/RecentSearches';
 import { PlaceAutocomplete } from '@/components/PlaceAutocomplete';
 import { Recommendations } from '@/components/Recommendations';
+import { TopDealsCarousel } from '@/components/TopDealsCarousel';
 
 export default function Home() {
   const router = useRouter();
@@ -172,6 +173,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Top Deals Secondary Hero */}
+      <TopDealsCarousel />
 
       {/* Recommendations Section */}
       <section className="py-24 bg-white">

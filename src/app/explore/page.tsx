@@ -29,7 +29,7 @@ export default function ExplorePage() {
             <div className="px-2">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-2xl font-bold text-luxury">{dest.name}</h3>
-                <VibeTag vibe={dest.vibe} />
+                <VibeTag label={dest.vibe} />
               </div>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 {dest.description}

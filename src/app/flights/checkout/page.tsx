@@ -6,6 +6,7 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { Skeleton } from '@/components/Skeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { AncillarySelection } from '@/components/AncillarySelection';
+import { LitePayment } from '@/components/LitePayment';
 import { useAuth } from '@/context/AuthContext';
 import { usePreferences } from '@/context/PreferencesContext';
 import { FlightAncillaries } from '@/types';
@@ -343,7 +344,7 @@ export default function FlightCheckoutPage() {
               </div>
               
               <button 
-                onClick={handleBooking}
+                onClick={() => handleBooking()}
                 disabled={isBooking}
                 className="w-full bg-accent text-luxury font-bold py-5 rounded-2xl hover:bg-white hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] shadow-xl shadow-accent/10 disabled:opacity-50"
               >
