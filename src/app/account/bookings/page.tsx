@@ -146,11 +146,19 @@ export default function BookingsPage() {
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
-                      {booking.type === 'flight' ? 'Class' : 'Room'}
+                      {booking.type === 'flight' ? 'Details' : 'Room'}
                     </p>
-                    <p className="text-sm text-gray-600 truncate">
-                      {booking.type === 'flight' ? booking.cabinClass : booking.roomType || 'Maison Suite'}
-                    </p>
+                    <div className="text-sm text-gray-600 truncate">
+                      {booking.type === 'flight' ? (
+                        <div className="flex flex-col">
+                          <span>{booking.cabinClass}</span>
+                          {booking.duration && <span className="text-[10px] text-gray-400">{booking.duration} • {booking.stops === 0 ? 'Non-stop' : `${booking.stops} stops`}</span>}
+                          {booking.aircraft && <span className="text-[10px] text-gray-400 italic">{booking.aircraft}</span>}
+                        </div>
+                      ) : (
+                        booking.roomType || 'Maison Suite'
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Reference</p>
