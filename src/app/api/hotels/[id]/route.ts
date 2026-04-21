@@ -3,17 +3,22 @@ import { getHotelDetails } from '@/lib/api';
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const hotel = await getHotelDetails(id);
+    const result = await getHotelDetails(id);
+    const hotel = result.data;
+
+    if (!hotel) {
+       return Response.json({ error: 'Sanctuary not found' }, { status: 404 });
+    }
 
     return Response.json({
-      id: hotel.data?.id,
-      name: hotel.data?.name,
-      city: hotel.data?.city,
-      star_rating: hotel.data?.star_rating || 4,
-      photo: hotel.data?.photo || '',
-      description: hotel.data?.description || 'Premium hotel offering world-class amenities and service',
-      amenities: hotel.data?.amenities || [],
-      address: hotel.data?.address || '',
+      id: hotel.id,
+      name: hotel.name,
+      city: hotel.city,
+      star_rating: hotel.star_rating || 4,
+      photo: hotel.photo || '',
+      description: hotel.description || 'Premium hotel offering world-class amenities and service',
+      amenities: hotel.amenities || [],
+      address: hotel.address || '',
     });
   } catch (error) {
     return Response.json(

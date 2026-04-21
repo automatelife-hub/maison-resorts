@@ -7,8 +7,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        luxury: '#1a1a1a',
-        accent: '#d4af37',
+        luxury: '#051612', // Deep Emerald Black
+        emerald: '#062c21',
+        accent: '#d4af37', // Royal Gold
+        warm: '#fdfbf7',
       },
     },
   },

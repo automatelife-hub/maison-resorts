@@ -66,6 +66,10 @@ export default function CheckoutPage() {
   };
 
   const handleBooking = async (piId?: string) => {
+    // If handleBooking was called without a piId, and we don't have one in state, 
+    // it means it was called manually (which shouldn't happen now, but for safety)
+    const confirmedPiId = piId || paymentIntentId;
+    
     if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
       alert('Please fill in all guest details before payment');
       return;
@@ -79,7 +83,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           prebookId: prebookData.prebookId,
           guestDetails,
-          paymentIntentId: piId,
+          paymentIntentId: confirmedPiId,
           uid: user?.uid || null,
           hotelName: prebookData.hotelName || 'Maison Retreat',
           checkin: prebookData.checkin,
@@ -89,7 +93,10 @@ export default function CheckoutPage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Booking failed. Please try again.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Booking failed. Please try again.');
+      }
       const result = await response.json();
       
       router.push(`/confirmation?bookingId=${result.bookingId}`);
@@ -237,21 +244,13 @@ export default function CheckoutPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end mb-4">
                 <span className="text-gray-400 text-sm uppercase tracking-widest">Total</span>
                 <PriceDisplay price={finalTotal} currency={prebookData.currency} className="text-2xl font-bold text-accent" />
               </div>
               
-              <button 
-                onClick={() => handleBooking()}
-                disabled={isBooking}
-                className="w-full bg-accent text-luxury font-bold py-4 rounded-xl hover:bg-white transition-all uppercase tracking-widest text-xs shadow-lg shadow-accent/20 disabled:opacity-50"
-              >
-                {isBooking ? 'Processing...' : 'Confirm Voyage'}
-              </button>
-              
               <p className="text-[10px] text-center text-gray-500 leading-relaxed uppercase tracking-tighter">
-                By confirming, you agree to our terms of heritage and the hotel's cancellation policy.
+                Payment is processed securely via our luxury gateway. By paying, you agree to our terms of heritage and the hotel's cancellation policy.
               </p>
             </div>
           </div>

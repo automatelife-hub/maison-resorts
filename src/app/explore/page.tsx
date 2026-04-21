@@ -1,101 +1,143 @@
 'use client';
 
+import { useState } from 'react';
 import { FEATURED_DESTINATIONS } from '@/data/destinations';
-import { DestinationCard } from '@/components/DestinationCard';
-import { VibeTag } from '@/components/VibeTag';
-import { InteractiveMap } from '@/components/InteractiveMap';
+import { SanctuaryPortal } from '@/components/SanctuaryPortal';
+import { HeritageGlobe } from '@/components/HeritageGlobe';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ExplorePage() {
+  const [activeVibe, setActiveVibe] = useState('All');
+  const vibes = ['All', 'Barefoot Luxury', 'Quiet Luxury', 'Intentional Travel', 'Slow Mode'];
+
+  const filteredDestinations = activeVibe === 'All' 
+    ? FEATURED_DESTINATIONS 
+    : FEATURED_DESTINATIONS.filter(d => d.vibe === activeVibe);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-luxury">
-          Curated <span className="text-accent">Destinations</span>
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          For the discerning traveler seeking conscious authenticity and hidden heritage. 
-          Discover the European niche vacation spots defining the 2026 travel landscape.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {FEATURED_DESTINATIONS.map((dest) => (
-          <div key={dest.id} className="space-y-6">
-            <DestinationCard
-              countryCode={dest.countryCode}
-              countryName={dest.name}
-              image={dest.image}
-            />
-            <div className="px-2">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-2xl font-bold text-luxury">{dest.name}</h3>
-                <VibeTag label={dest.vibe} />
-              </div>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                {dest.description}
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                {dest.highlights.map((highlight) => (
-                  <div key={highlight} className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="text-accent text-lg">✦</span>
-                    {highlight}
-                  </div>
-                ))}
-              </div>
-              
-              {/* SEO Meta Section (Visual for now) */}
-              <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap gap-2">
-                {dest.seoKeywords.map((keyword) => (
-                  <span key={keyword} className="text-[10px] uppercase tracking-wider text-gray-400">
-                    #{keyword.replace(/\s+/g, '-')}
-                  </span>
-                ))}
-              </div>
+    <div className="bg-[#050505] min-h-screen text-white">
+      {/* 3D Discovery Hero */}
+      <section className="relative pt-24 pb-12 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-16">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent mb-6 font-bold">
+               Discovery Interface v3.0
+            </h3>
+            <h1 className="text-6xl md:text-8xl font-bold italic font-serif tracking-tighter leading-tight mb-8">
+               Explore the <br />
+               <span className="text-accent">Collection</span>
+            </h1>
+            <p className="text-lg text-gray-400 font-light leading-relaxed max-w-xl mb-12">
+               Our 2026 collection is a curated map of "Conscious Authenticity." 
+               Spin the heritage globe to locate niche sanctuaries across the European frontier.
+            </p>
+            
+            <div className="flex flex-wrap gap-4">
+               {vibes.map((v) => (
+                 <button 
+                   key={v}
+                   onClick={() => setActiveVibe(v)}
+                   className={`px-6 py-3 rounded-full border text-[10px] uppercase tracking-widest font-bold transition-all duration-500 ${
+                     activeVibe === v 
+                       ? 'bg-accent text-luxury border-accent shadow-lg shadow-accent/20' 
+                       : 'border-white/10 hover:border-accent hover:text-accent'
+                   }`}
+                 >
+                   {v}
+                 </button>
+               ))}
             </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <HeritageGlobe />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Masonry Collection */}
+      <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
+        <div className="flex justify-between items-end mb-16 px-4">
+           <div>
+             <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-2 font-bold">{activeVibe} Collection</h3>
+             <h2 className="text-4xl font-bold text-white italic font-serif tracking-tighter italic">Niche <span className="text-accent">Sanctuaries</span></h2>
+           </div>
+           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold hidden md:block">
+             {filteredDestinations.length} Sanctuaries Found
+           </p>
+        </div>
+
+        <motion.div 
+          layout
+          className="grid grid-cols-1 md:grid-cols-2 gap-12"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredDestinations.map((dest, i) => (
+              <motion.div
+                key={dest.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.5 }}
+              >
+                <SanctuaryPortal destination={dest} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </section>
+
+      {/* Philosophy Section */}
+      <section className="max-w-7xl mx-auto px-6 py-32 border-t border-white/5">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-[4rem] p-12 md:p-24 relative overflow-hidden group border border-white/10 shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+             <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[150px] animate-pulse" />
           </div>
-        ))}
-      </div>
-
-      <div className="mt-24 bg-luxury rounded-3xl p-12 text-center text-white relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <img 
-            src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000" 
-            alt="Background pattern" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative z-10">
-          <h2 className="text-3xl font-bold mb-6">The MAISON Philosophy</h2>
-          <p className="max-w-3xl mx-auto text-gray-300 mb-8 leading-relaxed">
-            At Maison, we don't just book rooms; we facilitate voyages. Our 2026 collection is rooted in 
-            "conscious authenticity"—moving away from generic opulence toward narrative-driven sanctuaries 
-            that feel like private homes. Discover the soul of the Mediterranean, the silence of the Arctic, 
-            and the heritage of the Alps.
-          </p>
-          <div className="flex justify-center gap-8">
-            <div className="text-center">
-              <div className="text-accent text-3xl font-bold mb-1">01</div>
-              <div className="text-sm uppercase tracking-widest">Heritage</div>
-            </div>
-            <div className="text-center">
-              <div className="text-accent text-3xl font-bold mb-1">02</div>
-              <div className="text-sm uppercase tracking-widest">Seclusion</div>
-            </div>
-            <div className="text-center">
-              <div className="text-accent text-3xl font-bold mb-1">03</div>
-              <div className="text-sm uppercase tracking-widest">Narrative</div>
-            </div>
+          
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+             <div>
+                <h2 className="text-4xl md:text-6xl font-bold text-white mb-10 italic font-serif tracking-tighter">
+                   The Maison <br /><span className="text-accent">Philosophy</span>
+                </h2>
+                <p className="text-gray-400 text-lg leading-relaxed font-light mb-12">
+                   At Maison, we don't just book rooms; we facilitate voyages. Our 2026 collection is rooted in 
+                   "conscious authenticity"—moving away from generic opulence toward narrative-driven sanctuaries 
+                   that feel like private homes. Discover the soul of the Mediterranean, the silence of the Arctic, 
+                   and the heritage of the Alps.
+                </p>
+                <div className="grid grid-cols-3 gap-8">
+                  {[
+                    { val: '01', label: 'Heritage' },
+                    { val: '02', label: 'Seclusion' },
+                    { val: '03', label: 'Narrative' }
+                  ].map((item) => (
+                    <div key={item.val} className="group/item">
+                       <div className="text-accent text-4xl font-bold mb-2 italic font-serif group-hover/item:translate-y-[-4px] transition-transform duration-500">{item.val}</div>
+                       <div className="text-[8px] uppercase tracking-[0.4em] text-gray-500 font-bold">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+             
+             <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl grayscale hover:grayscale-0 transition-all duration-1000 border border-white/10">
+                <img 
+                  src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000" 
+                  alt="Philosophy" 
+                  className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-[2000ms]"
+                />
+             </div>
           </div>
         </div>
-      </div>
-
-      <div className="mt-24">
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold text-luxury mb-4">Discovery Map</h2>
-          <p className="text-gray-500 max-w-xl mx-auto">Explore our sanctuary collection geographically.</p>
-        </div>
-        <InteractiveMap />
-      </div>
+      </section>
     </div>
   );
 }

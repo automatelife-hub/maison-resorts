@@ -2,13 +2,13 @@ import { book } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
-    const { prebookId, guestDetails, uid, hotelName, checkin, checkout, sellingRate, currency } = await request.json();
+    const { prebookId, guestDetails, uid, hotelName, checkin, checkout, sellingRate, currency, paymentIntentId } = await request.json();
     
     if (!prebookId || !guestDetails) {
       return Response.json({ error: 'prebookId and guestDetails are required' }, { status: 400 });
     }
 
-    const bookingResult = await book(prebookId, guestDetails);
+    const bookingResult = await book(prebookId, guestDetails, paymentIntentId);
 
     // Save to Firestore if user is authenticated
     if (uid) {

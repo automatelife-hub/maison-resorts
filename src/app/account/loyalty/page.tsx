@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
 import { Skeleton } from '@/components/Skeleton';
 import { PriceDisplay } from '@/components/PriceDisplay';
+import { Award, ChevronRight, Sparkles } from 'lucide-react';
+import { VoucherVault } from '@/components/VoucherVault';
 
 export default function LoyaltyPage() {
   const { user, loading: authLoading } = useAuth();
@@ -33,7 +36,6 @@ export default function LoyaltyPage() {
 
         if (loyaltyRes.ok) {
           const apiLoyaltyData = await loyaltyRes.json();
-          // Merge or prefer API data if available
           setLoyaltyData((prev: any) => ({ ...prev, ...apiLoyaltyData }));
         }
 
@@ -62,6 +64,14 @@ export default function LoyaltyPage() {
         vouchersSnap.forEach((doc) => {
           fetchedVouchers.push({ id: doc.id, ...doc.data() });
         });
+        
+        // Add some high-fidelity mocks if empty for design demo
+        if (fetchedVouchers.length === 0) {
+          fetchedVouchers.push(
+            { id: 'v1', name: 'Winter Sanctuary', code: 'MAISON-WINTER-26', value: 15, discountType: 'percentage', description: 'Exclusive winter reduction' },
+            { id: 'v2', name: 'Alps Heritage', code: 'ALPS-ELITE', value: 250, discountType: 'fixed', description: 'Premium alpine access' }
+          );
+        }
         setVouchers(fetchedVouchers);
         
       } catch (err) {
@@ -76,12 +86,11 @@ export default function LoyaltyPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <Skeleton className="h-12 w-1/3 mb-12" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Skeleton className="h-64 w-full rounded-3xl" />
-          <Skeleton className="h-64 w-full rounded-3xl" />
-          <Skeleton className="h-64 w-full rounded-3xl" />
+      <div className="space-y-12">
+        <Skeleton className="h-12 w-1/3 rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           <Skeleton className="h-[400px] lg:col-span-2 rounded-[3rem]" />
+           <Skeleton className="h-[400px] rounded-[3rem]" />
         </div>
       </div>
     );
@@ -89,7 +98,7 @@ export default function LoyaltyPage() {
 
   if (!user) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-24">
+      <div className="py-24">
         <EmptyState 
           title="Members Only" 
           description="Please sign in to view your Maison loyalty rewards and vouchers." 
@@ -99,111 +108,135 @@ export default function LoyaltyPage() {
     );
   }
 
+  const currentPoints = loyaltyData?.points || 0;
+  const nextTierPoints = 5000;
+  const progress = (currentPoints / nextTierPoints) * 100;
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
-      <div className="mb-12">
-        <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-2">Member's Maison</h3>
-        <h1 className="text-5xl font-bold text-luxury italic font-serif">Welcome back, <span className="text-accent">{user.displayName?.split(' ')[0] || 'Voyager'}</span></h1>
-      </div>
+    <div className="space-y-16 pb-24">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent mb-4 font-bold">The Member's Maison</h3>
+        <h1 className="text-5xl font-bold text-white italic font-serif tracking-tighter">
+          The Art of <span className="text-accent">Loyalty</span>
+        </h1>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-        {/* Points Card */}
-        <div className="bg-luxury text-white rounded-[2rem] p-10 shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-accent opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-8">Available Points</p>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl font-bold text-accent">{loyaltyData?.points || 0}</span>
-            <span className="text-sm text-gray-400 uppercase tracking-widest">pts</span>
-          </div>
-          <p className="text-xs text-gray-500 mb-8 leading-relaxed">Estimated value: <PriceDisplay price={(loyaltyData?.points || 0) * 0.01} currency="USD" className="text-white" /></p>
-          <button className="w-full bg-white/5 border border-white/10 text-white font-bold py-3 rounded-xl hover:bg-accent hover:text-luxury transition-all text-[10px] uppercase tracking-widest">
-            Redeem Points
-          </button>
-        </div>
-
-        {/* Tier Card */}
-        <div className="bg-white rounded-[2rem] p-10 shadow-sm border border-gray-100 flex flex-col justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-8">Status Level</p>
-            <h2 className="text-3xl font-bold text-luxury italic font-serif mb-2">{loyaltyData?.tier || 'Heritage Member'}</h2>
-            <p className="text-xs text-gray-500 mb-8">You are <span className="text-luxury font-bold">1,250 pts</span> away from the "Sanctuary" tier.</p>
-          </div>
-          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-accent h-full w-1/3" />
-          </div>
-        </div>
-
-        {/* Next Voyage Card */}
-        <div className="bg-gray-50 rounded-[2rem] p-10 border border-gray-100 flex flex-col justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-8">Next Voyage</p>
-            <h2 className="text-xl font-bold text-luxury mb-2">No upcoming stays</h2>
-            <p className="text-xs text-gray-500">Discover your next sanctuary in our 2026 collection.</p>
-          </div>
-          <a href="/explore" className="text-accent font-bold text-[10px] uppercase tracking-widest hover:translate-x-2 transition-transform inline-block">
-            Explore Destinations →
-          </a>
-        </div>
-      </div>
-
-      {/* Vouchers Section */}
-      <div className="mb-16">
-        <h2 className="text-2xl font-bold text-luxury mb-8 italic font-serif">Your <span className="text-accent">Vouchers</span></h2>
-        {vouchers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vouchers.map((v) => (
-              <div key={v.id} className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-8 relative group hover:border-accent transition-colors">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="bg-accent/10 text-accent px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                    {v.discountType === 'percentage' ? `${v.value}% OFF` : `$${v.value} OFF`}
+      {/* The Ascent & Points */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Points & Progress (The Ascent) */}
+        <div className="lg:col-span-2 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] -mr-32 -mt-32" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row gap-16 items-center">
+            {/* The Ascent Visualization */}
+            <div className="relative w-24 h-64 flex items-center justify-center">
+              {/* Track */}
+              <div className="absolute inset-0 w-2 left-1/2 -translate-x-1/2 bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ height: 0 }}
+                  animate={{ height: `${progress}%` }}
+                  transition={{ duration: 2, ease: "easeOut" }}
+                  className="absolute bottom-0 w-full bg-gradient-to-t from-accent/40 via-accent to-white"
+                />
+              </div>
+              
+              {/* Tiers */}
+              <div className="absolute inset-0 flex flex-col justify-between items-center py-2">
+                {[
+                  { label: 'ELYSIUM', icon: '✦', color: '#fff' },
+                  { label: 'SANCTUARY', icon: '✧', color: '#d4af37' },
+                  { label: 'HERITAGE', icon: '•', color: '#666' }
+                ].map((tier, i) => (
+                  <div key={tier.label} className="relative group/tier flex flex-col items-center">
+                     <div className={`w-10 h-10 rounded-full bg-[#0a0a0a] border border-white/10 flex items-center justify-center text-sm mb-2 shadow-2xl transition-all duration-500 ${i === 2 ? 'border-accent shadow-accent/20' : ''}`}>
+                       <span className={i === 2 ? 'text-accent' : 'text-gray-500'}>{tier.icon}</span>
+                     </div>
+                     <span className="text-[8px] uppercase tracking-widest text-gray-500 font-bold absolute left-12 whitespace-nowrap opacity-0 group-hover/tier:opacity-100 transition-opacity">
+                       {tier.label}
+                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-gray-400">{v.code}</span>
-                </div>
-                <h3 className="font-bold text-luxury mb-2">{v.name}</h3>
-                <p className="text-xs text-gray-500 mb-6">{v.description}</p>
-                <button className="text-[10px] uppercase tracking-widest font-bold text-luxury group-hover:text-accent transition-colors">
-                  Apply to Booking →
+                ))}
+              </div>
+            </div>
+
+            {/* Points Info */}
+            <div className="flex-1 text-center md:text-left">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-8 font-bold">Accumulated Heritage</p>
+              <div className="flex items-baseline justify-center md:justify-start gap-4 mb-4">
+                <motion.span 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-8xl font-bold text-white tracking-tighter italic font-serif"
+                >
+                  {currentPoints}
+                </motion.span>
+                <span className="text-accent text-sm font-bold uppercase tracking-widest">PTS</span>
+              </div>
+              <p className="text-gray-400 text-sm font-light max-w-sm leading-relaxed mb-8">
+                You are currently in the <span className="text-white font-bold italic">Heritage</span> tier.
+                Complete <span className="text-accent font-bold">1,250 pts</span> more to reach <span className="text-white font-bold italic">Sanctuary</span> status.
+              </p>
+              <div className="flex gap-4">
+                <button className="bg-accent text-black px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-accent/10">
+                  Redeem Benefits
+                </button>
+                <button className="border border-white/10 text-white px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-all">
+                  History
                 </button>
               </div>
-            ))}
+            </div>
           </div>
-        ) : (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
-            <p className="text-gray-400 text-sm">No personal vouchers available at this moment.</p>
+        </div>
+
+        {/* Benefits Card */}
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 flex flex-col justify-between group overflow-hidden relative">
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mb-16 -mr-16 group-hover:bg-accent/10 transition-colors" />
+          
+          <div>
+            <Award className="text-accent mb-8" size={32} />
+            <h3 className="text-xl font-bold text-white italic font-serif mb-6">Tier Privileges</h3>
+            <ul className="space-y-4">
+              {[
+                'Priority Sanctuary Access',
+                'Complimentary Late Departures',
+                'Heritage Welcome Amenities',
+                'Member-Only Collection Rates'
+              ].map((benefit, i) => (
+                <li key={i} className="flex items-center gap-4 text-xs text-gray-400 group/item">
+                  <span className="text-accent font-bold group-hover/item:translate-x-1 transition-transform">✦</span>
+                  {benefit}
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
+          
+          <button className="text-[10px] uppercase tracking-widest font-bold text-accent hover:text-white transition-colors mt-12 flex items-center gap-2">
+            View All Privileges <ChevronRight size={12} />
+          </button>
+        </div>
       </div>
 
-      {/* Global Offers Section */}
-      <div className="mb-16">
-        <h2 className="text-2xl font-bold text-luxury mb-8 italic font-serif">Global <span className="text-accent">Offers</span></h2>
-        {globalVouchers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {globalVouchers.map((v: any, idx: number) => (
-              <div key={v.id || idx} className="bg-gray-50 border border-gray-100 rounded-3xl p-8 relative group hover:bg-white hover:shadow-xl transition-all">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="bg-luxury text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    PROMO
-                  </div>
-                  <span className="text-[10px] font-mono text-gray-400">{v.code || 'LIMITED'}</span>
-                </div>
-                <h3 className="font-bold text-luxury mb-2">{v.name || 'Seasonal Special'}</h3>
-                <p className="text-xs text-gray-500 mb-6">{v.description || 'Exclusive access to our newest collection.'}</p>
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200/50">
-                  <span className="text-xl font-bold text-accent">{v.value ? (v.discountType === 'percentage' ? `${v.value}%` : `$${v.value}`) : 'Varies'}</span>
-                  <button className="text-[10px] uppercase tracking-widest font-bold text-luxury">
-                    Details →
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Vouchers (The Maison Vault) */}
+      <section className="pt-12">
+        <div className="text-center mb-16">
+           <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent mb-4 font-bold">The Maison Vault</h3>
+           <h2 className="text-5xl font-bold text-white italic font-serif tracking-tighter italic">Your <span className="text-accent">Vouchers</span></h2>
+           <p className="text-[10px] uppercase tracking-[0.3em] text-gray-600 font-bold mt-4">Click to inspect heritage reductions</p>
+        </div>
+
+        {vouchers.length > 0 ? (
+          <VoucherVault vouchers={vouchers} />
         ) : (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
-            <p className="text-gray-400 text-sm">Check back later for seasonal Maison offers.</p>
+          <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-24 text-center">
+             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 text-gray-600">✧</div>
+             <p className="text-gray-500 font-light text-sm uppercase tracking-widest">The vault is currently unoccupied.</p>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

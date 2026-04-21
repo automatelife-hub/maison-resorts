@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profile rules
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Nested collections for each user
+      match /bookings/{bookingId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /loyalty/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Only allow writes via Admin SDK/Cloud Functions
+      }
+      
+      match /vouchers/{voucherId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Only allow writes via Admin SDK/Cloud Functions
+      }
+
+      match /favorites/{hotelId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Global data rules (e.g., featured hotels or destinations)
+    // Currently, this app fetches hotel data from LiteAPI directly, 
+    // but if you cache global content in Firestore, these would be read-only for public.
+    match /public_content/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
