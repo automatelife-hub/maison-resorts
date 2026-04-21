@@ -1,6 +1,5 @@
 import type { HotelData, Rate, Review, Currency, Facility, SearchParams, SearchFilter, Country, City } from '@/types';
 import { COLLECTION_2026 } from '@/data/collection';
-// @ts-ignore
 import liteApiSdk from 'liteapi-node-sdk';
 
 const LITEAPI_KEY = process.env.LITEAPI_KEY || '';
