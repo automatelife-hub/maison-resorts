@@ -129,21 +129,22 @@
 ## Environment Variables Required
 
 ```env
-NEXT_PUBLIC_LITEAPI_KEY
-NEXT_PUBLIC_LITEAPI_BASE_URL
-NEXT_PUBLIC_LITEAPI_VOUCHERS_BASE_URL
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+LITEAPI_KEY
+LITEAPI_BASE_URL
+LITEAPI_VOUCHERS_BASE_URL
 ```
 
 ## Ready for
 
-- Database integration (Supabase migrations)
-- User authentication
+- Database integration (Firestore collections & security rules)
+- User authentication (Firebase Auth)
 - Payment processing
 - Loyalty program backend
 - Real API testing
-- Production deployment
+- Production deployment (Firebase Hosting)
 
 ## Project Path
 `C:\Users\PokerConnect\OneDrive\Desktop\Coding Projects\Maison\maison\`

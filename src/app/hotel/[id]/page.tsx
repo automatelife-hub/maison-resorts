@@ -9,6 +9,7 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { usePreferences } from '@/context/PreferencesContext';
 import { SentimentDisplay } from '@/components/SentimentDisplay';
 import { FavoriteButton } from '@/components/FavoriteButton';
+import { SanctuaryPlanner } from '@/components/SanctuaryPlanner';
 
 interface HotelData {
   id: string;
@@ -28,8 +29,35 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true);
   const [ratesLoading, setRatesLoading] = useState(false);
   const [error, setError] = useState('');
+  const [occupancies, setOccupancies] = useState<any[]>([{ adults: 2, childrenAges: [] }]);
   const { currency } = usePreferences();
   const router = useRouter();
+
+  const fetchRates = async (currentOccupancies: any[]) => {
+    try {
+      setRatesLoading(true);
+      const checkIn = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+      const checkOut = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+      const response = await fetch('/api/hotels/rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hotelId,
+          checkInDate: checkIn,
+          checkOutDate: checkOut,
+          occupancies: currentOccupancies
+        }),
+      });
+      if (response.ok) {
+        const ratesData = await response.json();
+        setRates(ratesData.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch rates', err);
+    } finally {
+      setRatesLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!hotelId) return;
@@ -41,29 +69,29 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
         if (!response.ok) throw new Error('Failed to fetch hotel sanctuary');
         const data = await response.json();
         setHotel(data);
-        
-        // Also fetch rates (using dynamic dates 2 weeks out)
-        setRatesLoading(true);
-        const checkIn = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
-        const checkOut = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
-        const ratesRes = await fetch(`/api/hotels/rates?hotelId=${hotelId}&checkInDate=${checkIn}&checkOutDate=${checkOut}&guests=2`);
-        if (ratesRes.ok) {
-          const ratesData = await ratesRes.json();
-          setRates(ratesData.data || []);
-        }
+        await fetchRates(occupancies);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sanctuary');
       } finally {
         setLoading(false);
-        setRatesLoading(false);
       }
     };
 
     fetchHotel();
   }, [hotelId]);
 
+  const handleOccupancyChange = (newOccupancies: any[]) => {
+    setOccupancies(newOccupancies);
+    fetchRates(newOccupancies);
+  };
+
   const handleBookRate = (rateId: string) => {
-    router.push(`/checkout?hotelId=${hotelId}&rateId=${rateId}`);
+    const params = new URLSearchParams({
+      hotelId: hotelId,
+      rateId: rateId,
+      occupancies: JSON.stringify(occupancies)
+    });
+    router.push(`/checkout?${params.toString()}`);
   };
 
   if (loading) {
@@ -171,6 +199,14 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
           <div className="sticky top-24 bg-luxury text-white p-10 rounded-[3rem] shadow-2xl border border-white/5">
             <h2 className="text-2xl font-bold mb-8 italic font-serif">Reserved <span className="text-accent">Living</span></h2>
             
+            <div className="mb-8 pb-8 border-b border-white/10">
+               <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 mb-4 font-bold">Voyagers</h3>
+               <SanctuaryPlanner 
+                 occupancies={occupancies} 
+                 onChange={handleOccupancyChange} 
+               />
+            </div>
+
             {ratesLoading ? (
               <div className="space-y-6">
                 <Skeleton className="h-24 w-full bg-white/5 rounded-2xl" />

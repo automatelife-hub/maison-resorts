@@ -1,6 +1,6 @@
 # Maison - Premium Hotel Booking Platform
 
-A modern, luxury hotel booking application built with Next.js 16, React 19, TypeScript, and Supabase.
+A modern, luxury hotel booking application built with Next.js 16, React 19, TypeScript, and Firebase.
 
 ## Features
 
@@ -34,7 +34,7 @@ A modern, luxury hotel booking application built with Next.js 16, React 19, Type
 
 - **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Firebase (Firestore)
 - **Hotel Data**: LiteAPI
 - **Maps**: MapLibre GL
 
@@ -43,8 +43,9 @@ A modern, luxury hotel booking application built with Next.js 16, React 19, Type
 Copy `.env.local` and update with your credentials:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 LITEAPI_KEY=your_liteapi_key
 LITEAPI_BASE_URL=https://api.liteapi.travel/v1
 LITEAPI_VOUCHERS_BASE_URL=https://da.liteapi.travel

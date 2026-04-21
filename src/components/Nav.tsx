@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { CurrencySelector } from './CurrencySelector';
+import { ConciergeSearch } from './ConciergeSearch';
+
+import { Plane, Building2, User, LogOut } from 'lucide-react';
 
 export default function Nav() {
   const { user, signOutUser, loading } = useAuth();
@@ -10,23 +13,30 @@ export default function Nav() {
   return (
     <nav className="bg-luxury/95 backdrop-blur-md text-white py-6 sticky top-0 z-40 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        <Link href="/" className="text-3xl font-bold text-white tracking-tighter italic font-serif group">
-          MAISON <span className="text-accent group-hover:text-white transition-colors">Resorts</span>
-        </Link>
-        
-        <div className="flex gap-10 items-center">
-          <div className="hidden md:flex gap-8 items-center text-[10px] uppercase tracking-[0.2em] font-bold">
-            <Link href="/explore" className="hover:text-accent transition-colors">
-              Explore
+        <div className="flex items-center gap-12">
+          <Link href="/" className="text-3xl font-bold text-white tracking-tighter italic font-serif group">
+            MAISON <span className="text-accent group-hover:text-white transition-colors">Resorts</span>
+          </Link>
+          
+          <div className="hidden md:flex gap-10 items-center text-[10px] uppercase tracking-[0.3em] font-bold">
+            <Link href="/results" className="group flex items-center gap-2 hover:text-accent transition-all">
+              <Building2 size={12} className="text-accent/60 group-hover:text-accent transition-colors" />
+              Sanctuaries
             </Link>
-            <Link href="/account/bookings" className="hover:text-accent transition-colors">
+            <Link href="/flights" className="group flex items-center gap-2 hover:text-accent transition-all">
+              <Plane size={12} className="text-accent/60 group-hover:text-accent transition-colors" />
               Voyages
             </Link>
+            <Link href="/explore" className="hover:text-accent transition-colors">
+              Collection
+            </Link>
           </div>
-
-          <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
-          
+        </div>
+        
+        <div className="flex gap-8 items-center">
           <CurrencySelector />
+          
+          <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
           
           {loading ? (
             <div className="w-8 h-8 rounded-xl bg-white/5 animate-pulse" />

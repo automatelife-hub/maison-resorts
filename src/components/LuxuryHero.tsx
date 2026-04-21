@@ -1,47 +1,32 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Player } from '@remotion/player';
 import { CinematicBackground } from '../remotion/CinematicBackground';
-import { Plane, Building2, Calendar, Users, Search, ChevronRight, Zap } from 'lucide-react';
+import { Search, ChevronRight, MapPin, Zap, Building2, Plane, Calendar, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { PlaceAutocomplete } from './PlaceAutocomplete';
+import { IntentionGallery } from './IntentionGallery';
+import { SanctuaryPlanner } from './SanctuaryPlanner';
 
 export const LuxuryHero: React.FC = () => {
   const router = useRouter();
-  const [searchType, setSearchType] = useState<'hotels' | 'flights'>('hotels');
   const [destination, setDestination] = useState('');
-  const [origin, setOrigin] = useState('');
-  const [placeId, setPlaceId] = useState<string | undefined>();
-  const [checkInDate, setCheckInDate] = useState('');
-  const [checkOutDate, setCheckOutDate] = useState('');
-  const [occupancies, setOccupancies] = useState<any[]>([{ adults: 1, childrenAges: [] }]);
   const [isHovered, setIsHovered] = useState(false);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams({
-      destination,
-      checkInDate,
-      checkOutDate,
-      occupancies: JSON.stringify(occupancies),
-    });
-    
-    if (searchType === 'flights') {
-      params.append('origin', origin);
-      params.append('guests', occupancies.reduce((acc, curr) => acc + curr.adults + (curr.childrenAges?.length || 0), 0).toString());
-      router.push(`/flights?${params}`);
-    } else {
-      if (placeId) params.append('placeId', placeId);
-      router.push(`/results?${params}`);
-    }
-  };
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const scale = useTransform(scrollY, [0, 500], [1, 1.1]);
 
   return (
-    <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-black">
-      {/* Remotion Background Player */}
-      <div className="absolute inset-0 z-0 opacity-60">
+    <section ref={containerRef} className="relative h-[110vh] w-full flex items-center justify-center overflow-hidden bg-[#050505]">
+      {/* 3D Parallax Video Background */}
+      <motion.div 
+        style={{ scale }}
+        className="absolute inset-0 z-0"
+      >
         <Player
           component={CinematicBackground}
           durationInFrames={300}
@@ -57,168 +42,106 @@ export const LuxuryHero: React.FC = () => {
             objectFit: 'cover',
           }}
         />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#051612]/40 via-transparent to-[#051612] z-10" />
+        <div className="absolute inset-0 bg-[#062c21]/20 mix-blend-overlay z-10" />
+      </motion.div>
+
+      {/* Floating Brand Mark */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2 }}
+        className="absolute top-12 left-1/2 -translate-x-1/2 z-30"
+      >
+        <p className="text-[10px] uppercase tracking-[1em] text-accent/60 font-bold">Maison Resorts</p>
+      </motion.div>
+
+      {/* The Main Narrative */}
+      <div className="relative z-20 text-center px-6">
+        <motion.div
+          style={{ y: y1, opacity }}
+          className="space-y-8"
+        >
+          <span className="text-[10px] uppercase tracking-[0.6em] text-white/40 font-bold block mb-4">
+            EST. 2026 — COLLECTIVE NO. 01
+          </span>
+          <h1 className="text-7xl md:text-[12rem] font-bold text-white italic font-serif tracking-tighter leading-[0.8] transition-all">
+            The <span className="text-accent italic">Art</span> of <br />
+            <span className="relative inline-block">
+              Arrival
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: '100%' }}
+                transition={{ delay: 1, duration: 1.5, ease: "circOut" }}
+                className="absolute -bottom-4 left-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent"
+              />
+            </span>
+          </h1>
+          
+          <p className="max-w-2xl mx-auto text-gray-400 text-lg md:text-2xl font-light leading-relaxed pt-12 italic">
+            "We don't just book rooms; we locate a frequency."
+          </p>
+        </motion.div>
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl px-6 flex flex-col items-center">
-        {/* Tagline (BMW/Vogue Aesthetic) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-12"
-        >
-          <span className="text-[10px] uppercase tracking-[0.5em] text-accent font-bold mb-4 block">
-            Niche Collection 2026
-          </span>
-          <h1 className="text-6xl md:text-8xl font-bold text-white italic font-serif tracking-tighter leading-tight">
-            The Precision of <br />
-            <span className="text-accent">Escape</span>
-          </h1>
-        </motion.div>
-
-        {/* The Cockpit (Search Bar) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="w-full max-w-5xl"
-        >
-          <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-2 rounded-[3rem] shadow-2xl overflow-hidden relative group">
-            {/* Mode Switcher */}
-            <div className="flex gap-2 p-2 mb-2 relative z-10">
+      {/* The Floating Prism (Search) */}
+      <motion.div 
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute bottom-24 z-40 w-full max-w-lg px-6"
+      >
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-1 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] group/prism">
+           <div className="relative flex items-center p-2">
+              <div className="flex-1 pl-8">
+                 <p className="text-[8px] uppercase tracking-[0.4em] text-gray-500 mb-2 font-bold">Intention</p>
+                 <IntentionGallery 
+                    value={destination}
+                    onChange={(val) => setDestination(val)}
+                 />
+              </div>
+              
               <button
-                onClick={() => setSearchType('hotels')}
-                className={`flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-500 text-[10px] uppercase tracking-widest font-bold ${
-                  searchType === 'hotels' ? 'bg-white text-luxury shadow-xl' : 'text-gray-400 hover:text-white'
-                }`}
+                onClick={() => destination && router.push(`/results?destination=${encodeURIComponent(destination)}`)}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className="w-16 h-16 bg-accent text-luxury rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-xl shadow-accent/20 relative overflow-hidden"
               >
-                <Building2 size={14} className={searchType === 'hotels' ? 'text-accent' : ''} />
-                Sanctuaries
+                 <AnimatePresence mode="wait">
+                    {isHovered ? (
+                      <motion.div key="zap" initial={{ y: 20 }} animate={{ y: 0 }} exit={{ y: -20 }}>
+                        <Zap size={22} fill="currentColor" />
+                      </motion.div>
+                    ) : (
+                      <motion.div key="arrow" initial={{ x: -20 }} animate={{ x: 0 }} exit={{ x: 20 }}>
+                        <ChevronRight size={28} strokeWidth={3} />
+                      </motion.div>
+                    )}
+                 </AnimatePresence>
               </button>
-              <button
-                onClick={() => setSearchType('flights')}
-                className={`flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-500 text-[10px] uppercase tracking-widest font-bold ${
-                  searchType === 'flights' ? 'bg-white text-luxury shadow-xl' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <Plane size={14} className={searchType === 'flights' ? 'text-accent' : ''} />
-                Voyages
-              </button>
-            </div>
+           </div>
+        </div>
+        
+        <div className="mt-8 flex justify-center gap-12 text-[8px] uppercase tracking-[0.3em] text-gray-600 font-bold">
+           <div className="flex items-center gap-2"><MapPin size={10} className="text-accent/40" /> 12 Sanctuaries</div>
+           <div className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-accent animate-pulse" /> Verified 2026</div>
+        </div>
+      </motion.div>
 
-            {/* Search Form Fields */}
-            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-1 p-2 relative z-10">
-              <div className="md:col-span-1 bg-white/5 p-6 rounded-[2rem] border border-transparent focus-within:border-accent/30 transition-all">
-                <p className="text-[8px] uppercase tracking-widest text-gray-500 mb-2 font-bold flex items-center gap-2">
-                  <ChevronRight size={8} className="text-accent" />
-                  Destination
-                </p>
-                <PlaceAutocomplete
-                  value={destination}
-                  onChange={(val, pId) => {
-                    setDestination(val);
-                    if (pId) setPlaceId(pId);
-                  }}
-                  placeholder={searchType === 'hotels' ? 'Where to?' : 'Going where?'}
-                  className="bg-transparent border-none p-0 text-white text-sm focus:ring-0 placeholder:text-gray-600 font-medium"
-                />
-              </div>
+      {/* Decorative Side Elements (Vogue Style) */}
+      <div className="absolute left-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-24 items-center">
+         <div className="w-[1px] h-32 bg-gradient-to-t from-white/20 to-transparent" />
+         <p className="rotate-90 text-[8px] uppercase tracking-[0.8em] text-gray-600 whitespace-nowrap origin-center">Precision Escape</p>
+         <div className="w-[1px] h-32 bg-gradient-to-b from-white/20 to-transparent" />
+      </div>
 
-              {searchType === 'flights' && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="bg-white/5 p-6 rounded-[2rem] border border-transparent focus-within:border-accent/30 transition-all"
-                >
-                  <p className="text-[8px] uppercase tracking-widest text-gray-500 mb-2 font-bold flex items-center gap-2">
-                    <ChevronRight size={8} className="text-accent" />
-                    Origin
-                  </p>
-                  <input
-                    type="text"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                    placeholder="From where?"
-                    className="w-full bg-transparent border-none p-0 text-white text-sm focus:ring-0 placeholder:text-gray-600 font-medium"
-                  />
-                </motion.div>
-              )}
-
-              <div className="bg-white/5 p-6 rounded-[2rem] border border-transparent focus-within:border-accent/30 transition-all">
-                <p className="text-[8px] uppercase tracking-widest text-gray-500 mb-2 font-bold flex items-center gap-2">
-                  <Calendar size={10} className="text-accent" />
-                  Check In
-                </p>
-                <input
-                  type="date"
-                  value={checkInDate}
-                  onChange={(e) => setCheckInDate(e.target.value)}
-                  className="w-full bg-transparent border-none p-0 text-white text-sm focus:ring-0 invert dark:invert-0 font-medium"
-                />
-              </div>
-
-              <div className="bg-white/5 p-6 rounded-[2rem] border border-transparent focus-within:border-accent/30 transition-all relative">
-                <p className="text-[8px] uppercase tracking-widest text-gray-500 mb-2 font-bold flex items-center gap-2">
-                  <Users size={10} className="text-accent" />
-                  Voyagers
-                </p>
-                <button 
-                  type="button"
-                  className="w-full text-left text-white text-sm font-medium"
-                >
-                  {occupancies[0].adults} Adult
-                </button>
-                
-                {/* The Ignition Trigger (Ferrari Style) */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(212, 175, 55, 0.4)' }}
-                    whileTap={{ scale: 0.95 }}
-                    onHoverStart={() => setIsHovered(true)}
-                    onHoverEnd={() => setIsHovered(false)}
-                    className="w-16 h-16 bg-accent text-luxury rounded-full flex items-center justify-center shadow-lg group/btn overflow-hidden relative"
-                  >
-                    <AnimatePresence mode="wait">
-                      {isHovered ? (
-                        <motion.div
-                          key="zap"
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          exit={{ y: -20, opacity: 0 }}
-                        >
-                          <Zap size={24} fill="currentColor" />
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="search"
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          exit={{ y: -20, opacity: 0 }}
-                        >
-                          <Search size={24} strokeWidth={3} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    
-                    {/* Glowing Ring */}
-                    <div className="absolute inset-0 border-2 border-white/20 rounded-full animate-ping opacity-20" />
-                  </motion.button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </motion.div>
-
-        {/* Scroll Indicator (Apple Minimalism) */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="mt-24 text-[8px] uppercase tracking-[0.4em] text-gray-500 flex flex-col items-center gap-4"
-        >
-          <span>Scroll to Explore</span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-accent to-transparent" />
-        </motion.div>
+      <div className="absolute right-12 bottom-12 hidden md:block">
+         <div className="bg-white/5 backdrop-blur-xl border border-white/5 p-6 rounded-2xl max-w-[200px]">
+            <p className="text-[10px] text-white font-bold italic font-serif mb-2">Featured Collection</p>
+            <p className="text-[8px] text-gray-500 leading-relaxed uppercase tracking-widest">
+               Handpicked sanctuaries defining the European frontier.
+            </p>
+         </div>
       </div>
     </section>
   );
