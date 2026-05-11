@@ -77,6 +77,8 @@ export default function CheckoutPage() {
 
     try {
       setIsBooking(true);
+      const idToken = user ? await user.getIdToken() : null;
+
       const response = await fetch('/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,7 +86,7 @@ export default function CheckoutPage() {
           prebookId: prebookData.prebookId,
           guestDetails,
           paymentIntentId: confirmedPiId,
-          uid: user?.uid || null,
+          idToken,
           hotelName: prebookData.hotelName || 'Maison Retreat',
           checkin: prebookData.checkin,
           checkout: prebookData.checkout,

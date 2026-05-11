@@ -1,8 +1,10 @@
 import { book } from '@/lib/api';
 
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
+
 export async function POST(request: Request) {
   try {
-    const { prebookId, guestDetails, uid, hotelName, checkin, checkout, sellingRate, currency, paymentIntentId } = await request.json();
+    const { prebookId, guestDetails, idToken, hotelName, checkin, checkout, sellingRate, currency, paymentIntentId } = await request.json();
     
     if (!prebookId || !guestDetails) {
       return Response.json({ error: 'prebookId and guestDetails are required' }, { status: 400 });
@@ -11,15 +13,14 @@ export async function POST(request: Request) {
     const bookingResult = await book(prebookId, guestDetails, paymentIntentId);
 
     // Save to Firestore if user is authenticated
-    if (uid) {
+    if (idToken) {
       try {
-        const { getFirebaseFirestore } = await import('@/lib/firebase');
-        const { doc, setDoc } = await import('firebase/firestore');
-        const db = await getFirebaseFirestore();
+        const decodedToken = await adminAuth.verifyIdToken(idToken);
+        const uid = decodedToken.uid;
         
         const bookingId = bookingResult.bookingId || `CONF-${Date.now()}`;
         
-        await setDoc(doc(db, `users/${uid}/bookings`, bookingId), {
+        await adminDb.doc(`users/${uid}/bookings/${bookingId}`).set({
           bookingId,
           type: 'hotel',
           hotelName: hotelName || 'Maison Retreat',
