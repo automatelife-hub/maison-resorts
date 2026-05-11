@@ -23,7 +23,7 @@ export function TopDealsCarousel() {
           setDeals(data);
         }
       } catch (err) {
-        console.error('Failed to load deals');
+        console.error('Failed to load deals', err);
       } finally {
         setLoading(false);
       }

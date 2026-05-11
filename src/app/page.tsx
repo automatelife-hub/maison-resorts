@@ -25,7 +25,7 @@ export default function Home() {
           setFeaturedSpots(data);
         }
       } catch (err) {
-        console.error('Failed to load featured spots');
+        console.error('Failed to load featured spots', err);
       } finally {
         setLoading(false);
       }
