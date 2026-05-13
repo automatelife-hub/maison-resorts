@@ -1,11 +1,26 @@
 import { book } from '@/lib/api';
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
-    const { prebookId, guestDetails, uid, hotelName, checkin, checkout, sellingRate, currency, paymentIntentId } = await request.json();
+    const { prebookId, guestDetails, hotelName, checkin, checkout, sellingRate, currency, paymentIntentId } = await request.json();
     
     if (!prebookId || !guestDetails) {
       return Response.json({ error: 'prebookId and guestDetails are required' }, { status: 400 });
+    }
+
+    const authHeader = request.headers.get('Authorization');
+    let uid = null;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split('Bearer ')[1];
+      try {
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        uid = decodedToken.uid;
+      } catch (authErr) {
+        console.error('Failed to verify ID token:', authErr);
+        // If token is invalid, we proceed as unauthenticated but don't save to Firestore
+      }
     }
 
     const bookingResult = await book(prebookId, guestDetails, paymentIntentId);
@@ -13,13 +28,9 @@ export async function POST(request: Request) {
     // Save to Firestore if user is authenticated
     if (uid) {
       try {
-        const { getFirebaseFirestore } = await import('@/lib/firebase');
-        const { doc, setDoc } = await import('firebase/firestore');
-        const db = await getFirebaseFirestore();
-        
         const bookingId = bookingResult.bookingId || `CONF-${Date.now()}`;
         
-        await setDoc(doc(db, `users/${uid}/bookings`, bookingId), {
+        await adminDb.doc(`users/${uid}/bookings/${bookingId}`).set({
           bookingId,
           type: 'hotel',
           hotelName: hotelName || 'Maison Retreat',

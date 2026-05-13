@@ -77,14 +77,23 @@ export default function CheckoutPage() {
 
     try {
       setIsBooking(true);
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (user) {
+        const token = await user.getIdToken();
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/book', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           prebookId: prebookData.prebookId,
           guestDetails,
           paymentIntentId: confirmedPiId,
-          uid: user?.uid || null,
           hotelName: prebookData.hotelName || 'Maison Retreat',
           checkin: prebookData.checkin,
           checkout: prebookData.checkout,
