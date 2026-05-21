@@ -30,6 +30,9 @@ export default function Nav() {
             <Link href="/explore" className="hover:text-accent transition-colors">
               Collection
             </Link>
+            <Link href="/journal" className="hover:text-accent transition-colors">
+              Journal
+            </Link>
           </div>
         </div>
         

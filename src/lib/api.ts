@@ -1,10 +1,11 @@
-import type { HotelData, Rate, Review, Currency, Facility, SearchParams, SearchFilter, Country, City } from '@/types';
-import { COLLECTION_2026 } from '@/data/collection';
+import type { HotelData, Rate, Review, Currency, Facility, SearchParams, SearchFilter, Country, City } from '@/types/index.ts';
+import { COLLECTION_2026 } from '@/data/collection.ts';
 import liteApiSdk from 'liteapi-node-sdk';
 
 const LITEAPI_KEY = process.env.LITEAPI_KEY || '';
 const LITEAPI_HMAC_SECRET = process.env.LITEAPI_HMAC_SECRET || '';
 const LITEAPI_BASE_URL = process.env.LITEAPI_BASE_URL || 'https://api.liteapi.travel/v3.0';
+const LITEAPI_BOOK_URL = 'https://book.liteapi.travel/v3.0';
 const LITEAPI_VOUCHERS_BASE_URL = process.env.LITEAPI_VOUCHERS_BASE_URL || 'https://da.liteapi.travel';
 
 const LUXURY_MARGIN = 1.15; // 15% Maison Markup
@@ -57,25 +58,41 @@ export async function searchHotels(
       sdkParams.aiSearch = destination;
     }
 
-    const result = await liteApi.getFullRates(sdkParams);
+    const result = (await liteApi.getFullRates(sdkParams)) as any;
     
-    const hotels = result.hotels?.map((hotel: any, index: number) => ({
-      id: hotel.id,
-      name: hotel.name,
-      city: hotel.city,
-      address: hotel.address,
-      star_rating: hotel.starRating,
-      photo: hotel.main_photo || hotel.thumbnail || '',
-      vibe: ['Quiet Luxury', 'Barefoot Luxury', 'Slow Mode', 'Heritage Heritage'][index % 4], 
-      minPrice: hotel.roomTypes?.[0]?.rates?.[0]?.net_rate 
-        ? Math.ceil(hotel.roomTypes[0].rates[0].net_rate * LUXURY_MARGIN)
-        : null
-    })) || [];
+    if (result.status !== 'success' || !result.data) {
+      throw new Error(result.error || 'Failed to fetch rates from SDK');
+    }
+
+    const ratesMap = new Map();
+    if (Array.isArray(result.data.data)) {
+      for (const item of result.data.data) {
+        ratesMap.set(item.hotelId, item.roomTypes);
+      }
+    }
+
+    const hotels = result.data.hotels?.map((hotel: any, index: number) => {
+      const roomTypes = ratesMap.get(hotel.id) || [];
+      const minPrice = roomTypes[0]?.rates?.[0]?.net_rate 
+        ? Math.ceil(roomTypes[0].rates[0].net_rate * LUXURY_MARGIN)
+        : null;
+
+      return {
+        id: hotel.id,
+        name: hotel.name,
+        city: hotel.city || hotel.address?.split(',')[1]?.trim() || '',
+        address: hotel.address,
+        star_rating: hotel.rating ? Math.round(hotel.rating / 2) : 5,
+        photo: hotel.main_photo || hotel.thumbnail || '',
+        vibe: ['Quiet Luxury', 'Barefoot Luxury', 'Slow Mode', 'Heritage Heritage'][index % 4], 
+        minPrice
+      };
+    }) || [];
 
     return { data: hotels };
   } catch (e) {
     console.error('SDK Search Failed:', e);
-    return { data: [] };
+    throw e; // Propagate the error so API route fallback works!
   }
 }
 
@@ -139,16 +156,20 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
   }
 
   try {
-    const result = await liteApi.getFullRates({
+    const result = (await liteApi.getFullRates({
       hotelIds: [hotelId],
       checkin: checkInDate,
       checkout: checkOutDate,
       guestNationality: 'US',
       currency: 'USD',
       occupancies: mapOccupancies(occupancies)
-    });
+    })) as any;
 
-    const hotel = result.hotels?.[0];
+    if (result.status !== 'success' || !result.data) {
+      throw new Error(result.error || 'Failed to fetch rates from SDK');
+    }
+
+    const hotel = result.data?.data?.[0];
     return {
       data: hotel?.roomTypes?.map((room: any) => ({
         room_id: room.roomTypeId,
@@ -239,8 +260,8 @@ export async function semanticSearch(vibe: string, destination: string) {
 
 // Bookings
 export async function prebook(rateId: string) {
-  const body = { rateId };
-  const response = await fetch(`${LITEAPI_BASE_URL}/rates/prebook`, {
+  const body = { offerId: rateId };
+  const response = await fetch(`${LITEAPI_BOOK_URL}/rates/prebook`, {
     method: 'POST',
     headers: getHeaders(body),
     body: JSON.stringify(body),
@@ -253,7 +274,7 @@ export async function prebook(rateId: string) {
 export async function createPaymentIntent(prebookId: string, type: 'hotel' | 'flight' = 'hotel') {
   const endpoint = type === 'hotel' ? '/payments/intent' : '/flights/payments/intent';
   const body = { prebookId };
-  const response = await fetch(`${LITEAPI_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${LITEAPI_BOOK_URL}${endpoint}`, {
     method: 'POST',
     headers: getHeaders(body),
     body: JSON.stringify(body),
@@ -279,7 +300,7 @@ export async function book(
     guest_phone: guestDetails.phone,
     payment_intent_id: paymentIntentId, // Explicitly using snake_case as expected by many MoR APIs
   };
-  const response = await fetch(`${LITEAPI_BASE_URL}/rates/book`, {
+  const response = await fetch(`${LITEAPI_BOOK_URL}/rates/book`, {
     method: 'POST',
     headers: getHeaders(body),
     body: JSON.stringify(body),
@@ -289,21 +310,21 @@ export async function book(
   return result.data;
 }
 export async function listBookings() {
-  const response = await fetch(`${LITEAPI_BASE_URL}/bookings`, { headers: getHeaders() });
+  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to list bookings');
   const result = await response.json();
   return result.data || [];
 }
 
 export async function getBooking(bookingId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/bookings/${bookingId}`, { headers: getHeaders() });
+  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings/${bookingId}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get booking');
   const result = await response.json();
   return result.data;
 }
 
 export async function cancelBooking(bookingId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/bookings/${bookingId}`, {
+  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings/${bookingId}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify({ status: 'cancelled' }),
@@ -315,7 +336,7 @@ export async function cancelBooking(bookingId: string) {
 
 export async function amendBooking(bookingId: string, guestName: string, guestEmail: string) {
   const body = { guest_name: guestName, guest_email: guestEmail };
-  const response = await fetch(`${LITEAPI_BASE_URL}/bookings/${bookingId}/amend`, {
+  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings/${bookingId}/amend`, {
     method: 'PUT',
     headers: getHeaders(body),
     body: JSON.stringify(body),
@@ -375,8 +396,8 @@ export async function getMinRates(hotelIds: string[]) {
   });
   if (!response.ok) throw new Error('Failed to get min rates');
   const result = await response.json();
-  return result.hotels?.map((h: any) => ({
-    hotelId: h.id,
+  return result.data?.map((h: any) => ({
+    hotelId: h.hotelId,
     minRate: h.roomTypes?.[0]?.rates?.[0]?.net_rate || null
   })) || [];
 }

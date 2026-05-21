@@ -26,7 +26,7 @@ export default function Footer() {
               <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Destinations</a></li>
               <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Niche Spots 2026</a></li>
               <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Heritage Sanctuaries</a></li>
-              <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Private Voyages</a></li>
+              <li><a href="/journal" className="text-gray-500 hover:text-white transition-colors">Editorial Journal</a></li>
             </ul>
           </div>
 
