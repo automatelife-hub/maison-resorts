@@ -2,13 +2,15 @@
   "name": "maison",
   "version": "1.0.0",
   "description": "Premium Hotel Booking Platform",
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "deploy": "firebase deploy --only hosting"
+    "deploy": "firebase deploy --only hosting",
+    "test:api": "npx ts-node -r tsconfig-paths/register test-api.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
@@ -27,7 +29,8 @@
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "remotion": "^4.0.448"
+    "remotion": "^4.0.448",
+    "tsconfig-paths": "^4.2.0"
   },
   "engines": {
     "node": "20"

@@ -24,6 +24,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
+.env
 .env.local
 .env.*.local
 
@@ -37,3 +38,14 @@ yarn-error.log*
 .vercel
 
 firebase-debug.log
+
+# Scratch files and backups
+*.bak
+scratch-test*.js
+diagnose-liteapi.mjs
+read-api-agent.js
+read-subagents.js
+/dist
+/dist-test
+tsconfig.tsbuildinfo
+
