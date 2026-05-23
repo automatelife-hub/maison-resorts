@@ -49,6 +49,10 @@ export default function CheckoutPage() {
         
         if (!response.ok) throw new Error('The selected rate is no longer available. Please select another room.');
         const data = await response.json();
+        // Normalise price field — LiteAPI v3.0 may return total_amount or totalPayable
+        if (!data.selling_rate) {
+          data.selling_rate = data.total_amount || data.totalPayable || data.net_rate || 0;
+        }
         setPrebookData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize booking');

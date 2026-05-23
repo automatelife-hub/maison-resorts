@@ -22,3 +22,22 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const { hotelId, checkInDate, checkOutDate, occupancies } = await request.json();
+
+    if (!hotelId || !checkInDate || !checkOutDate) {
+      return Response.json({ error: 'Missing required parameters' }, { status: 400 });
+    }
+
+    const searchOccupancies = occupancies || [{ adults: 2 }];
+    const rates = await getHotelRates(hotelId, checkInDate, checkOutDate, searchOccupancies);
+    return Response.json(rates);
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : 'Failed to fetch rates' },
+      { status: 500 }
+    );
+  }
+}
