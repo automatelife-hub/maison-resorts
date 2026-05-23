@@ -37,3 +37,4 @@ yarn-error.log*
 .vercel
 
 firebase-debug.log
+tsconfig.tsbuildinfo
