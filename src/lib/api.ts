@@ -146,7 +146,7 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
         room_id: room.roomTypeId,
         room_name: room.roomType,
         rates: room.rates?.map((rate: any) => ({
-          rate_id: rate.rateId,
+          rate_id: rate.offerId || rate.rateId,
           net_rate: rate.net_rate,
           selling_rate: Math.ceil(rate.net_rate * LUXURY_MARGIN),
           currency: 'USD',
