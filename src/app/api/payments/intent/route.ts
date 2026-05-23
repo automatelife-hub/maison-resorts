@@ -7,6 +7,11 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Prebook ID is required' }, { status: 400 });
     }
 
+    // Curated hotels bypass Stripe — signal checkout to skip payment element
+    if (prebookId.startsWith('curated-prebook-')) {
+      return Response.json({ clientSecret: null, curated: true });
+    }
+
     const intent = await createPaymentIntent(prebookId, type);
     return Response.json(intent);
   } catch (error) {
