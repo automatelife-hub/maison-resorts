@@ -76,7 +76,9 @@ export function LitePayment({
   currency: string;
   onSuccess: (id: string) => void;
 }) {
-  const [clientSecret, setClientSecret] = useState('');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [curated, setCurated] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const initPayment = async () => {
@@ -87,20 +89,50 @@ export function LitePayment({
           body: JSON.stringify({ prebookId, type }),
         });
         const data = await response.json();
-        setClientSecret(data.clientSecret);
+        if (data.curated) {
+          setCurated(true);
+        } else {
+          setClientSecret(data.clientSecret);
+        }
       } catch (err) {
         console.error('Payment initialization failed', err);
+      } finally {
+        setReady(true);
       }
     };
 
     if (prebookId) initPayment();
   }, [prebookId, type]);
 
-  if (!clientSecret) {
+  if (!ready) {
     return (
       <div className="h-48 flex flex-col items-center justify-center space-y-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
         <p className="text-[10px] uppercase tracking-widest text-gray-400">Initializing Secure Gateway</p>
+      </div>
+    );
+  }
+
+  // Curated collection — no Stripe required, direct confirmation
+  if (curated) {
+    return (
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <h3 className="text-[10px] uppercase tracking-widest text-accent mb-6">Maison Curated Reservation</h3>
+        <p className="text-sm text-gray-500 mb-6">This sanctuary is part of the Maison 2026 Curated Collection. Your reservation is guaranteed directly with the property.</p>
+        <button
+          onClick={() => onSuccess('curated-direct')}
+          className="w-full bg-luxury text-accent font-bold py-4 rounded-xl hover:bg-black transition-all uppercase tracking-widest text-[10px] shadow-lg"
+        >
+          Confirm Reservation — {currency} {amount}
+        </button>
+      </div>
+    );
+  }
+
+  if (!clientSecret) {
+    return (
+      <div className="h-48 flex flex-col items-center justify-center space-y-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+        <p className="text-[10px] uppercase tracking-widest text-red-400">Payment gateway unavailable</p>
       </div>
     );
   }
