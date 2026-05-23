@@ -3,12 +3,18 @@ import { book } from '@/lib/api';
 export async function POST(request: Request) {
   try {
     const { prebookId, guestDetails, uid, hotelName, checkin, checkout, sellingRate, currency, paymentIntentId } = await request.json();
-    
+
     if (!prebookId || !guestDetails) {
       return Response.json({ error: 'prebookId and guestDetails are required' }, { status: 400 });
     }
 
-    const bookingResult = await book(prebookId, guestDetails, paymentIntentId);
+    // Curated prebook IDs are handled locally — no LiteAPI call needed
+    let bookingResult: any;
+    if (prebookId.startsWith('curated-prebook-')) {
+      bookingResult = { bookingId: `MAISON-${Date.now()}`, status: 'confirmed' };
+    } else {
+      bookingResult = await book(prebookId, guestDetails, paymentIntentId);
+    }
 
     // Save to Firestore if user is authenticated
     if (uid) {
