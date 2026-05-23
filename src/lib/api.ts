@@ -146,7 +146,7 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
         room_id: room.roomTypeId,
         room_name: room.roomType,
         rates: room.rates?.map((rate: any) => ({
-          rate_id: rate.rateId,
+          rate_id: rate.offerId || rate.rateId,
           net_rate: rate.net_rate,
           selling_rate: Math.ceil(rate.net_rate * LUXURY_MARGIN),
           currency: 'USD',
@@ -264,12 +264,17 @@ export async function book(
   },
   paymentIntentId?: string
 ) {
+  const [firstName, ...rest] = (guestDetails.name || '').trim().split(' ');
+  const lastName = rest.join(' ') || firstName;
   const body = {
     prebookId,
-    guest_name: guestDetails.name,
-    guest_email: guestDetails.email,
-    guest_phone: guestDetails.phone,
-    payment_intent_id: paymentIntentId,
+    guestInfo: {
+      guestFirstName: firstName,
+      guestLastName: lastName,
+      guestEmail: guestDetails.email,
+      guestPhone: guestDetails.phone,
+    },
+    paymentIntentId,
   };
   const response = await fetch(`${LITEAPI_BOOK_URL}/rates/book`, {
     method: 'POST',
