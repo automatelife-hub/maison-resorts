@@ -11,11 +11,14 @@ export async function POST(request: Request) {
     const searchOccupancies = occupancies || [{ adults: guests || 1 }];
 
     try {
-      // Search for hotels using unified v3.0 search
       const searchResults = await searchHotels(destination || 'Europe', checkInDate || '2026-06-01', checkOutDate || '2026-06-05', searchOccupancies, placeId);
-      
-      console.log(`[SEARCH] Success. Found ${searchResults.data.length} total hotels (including curated).`);
-      return Response.json({ hotels: searchResults.data || [] });
+
+      if (searchResults.data.length === 0) {
+        throw new Error('No hotels returned from LiteAPI');
+      }
+
+      console.log(`[SEARCH] Success. Found ${searchResults.data.length} hotels.`);
+      return Response.json({ hotels: searchResults.data });
     } catch (apiError) {
       console.error('[SEARCH] LiteAPI Fetch Failed, falling back to curated collection only:', apiError);
       
