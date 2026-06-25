@@ -1,0 +1,12 @@
+
+> maison@1.0.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+- Environments: .env
+✓ Ready in 570ms
+
+○ Compiling / ...
+ HEAD / 200 in 7.1s (next.js: 6.7s, application-code: 418ms)
