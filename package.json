@@ -12,22 +12,22 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@remotion/player": "^4.0.448",
-    "@stripe/react-stripe-js": "^6.6.0",
-    "@stripe/stripe-js": "^9.8.0",
+    "@remotion/player": "^4.0.484",
+    "@stripe/react-stripe-js": "^6.7.0",
+    "@stripe/stripe-js": "^9.9.0",
     "cobe": "^2.0.1",
-    "firebase": "^12.11.0",
+    "firebase": "^12.15.0",
     "firebase-admin": "^14.1.0",
     "firebase-frameworks": "^0.11.8",
     "firebase-functions": "^7.2.5",
-    "framer-motion": "^12.38.0",
+    "framer-motion": "^12.42.2",
     "liteapi-node-sdk": "^4.3.2",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.23.0",
     "maplibre-gl": "^5.24.0",
-    "next": "^16.2.9",
+    "next": "^16.2.10",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "remotion": "^4.0.448"
+    "remotion": "^4.0.484"
   },
   "engines": {
     "node": "20"
