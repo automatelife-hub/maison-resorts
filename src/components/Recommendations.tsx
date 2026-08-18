@@ -22,7 +22,7 @@ export function Recommendations() {
           setRecommendations(data);
         }
       } catch (err) {
-        console.error('Failed to load recommendations');
+        console.error('Failed to load recommendations', err);
       } finally {
         setLoading(false);
       }

@@ -30,7 +30,7 @@ export function SentimentDisplay({ categories: initialCategories, hotelId }: Sen
           setCategories(data.sentiment?.categories || data.categories || {});
         }
       } catch (err) {
-        console.error('Failed to fetch sentiment');
+        console.error('Failed to fetch sentiment', err);
       } finally {
         setLoading(false);
       }
