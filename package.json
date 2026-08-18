@@ -12,38 +12,38 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@remotion/player": "^4.0.448",
-    "@stripe/react-stripe-js": "^6.6.0",
-    "@stripe/stripe-js": "^9.8.0",
+    "@remotion/player": "^4.0.489",
+    "@stripe/react-stripe-js": "^6.7.0",
+    "@stripe/stripe-js": "^9.10.0",
     "cobe": "^2.0.1",
-    "firebase": "^12.11.0",
+    "firebase": "^12.16.0",
     "firebase-admin": "^14.1.0",
     "firebase-frameworks": "^0.11.8",
     "firebase-functions": "^7.2.5",
-    "framer-motion": "^12.38.0",
+    "framer-motion": "^12.42.2",
     "liteapi-node-sdk": "^4.3.2",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.24.0",
     "maplibre-gl": "^5.24.0",
-    "next": "^16.2.9",
+    "next": "^16.2.10",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "remotion": "^4.0.448"
+    "remotion": "^4.0.489"
   },
   "engines": {
     "node": "20"
   },
   "overrides": {
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.19",
     "@grpc/grpc-js": "^1.14.4",
     "cookie": "^0.7.0",
     "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.0.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.5.10",
+    "autoprefixer": "^10.5.3",
+    "postcss": "^8.5.19",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.0.0"
   }
