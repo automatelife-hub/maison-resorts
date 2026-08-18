@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { Skeleton } from '@/components/Skeleton';
@@ -29,6 +29,18 @@ export default function FlightCheckoutPage() {
   
   const [selectedBaggage, setSelectedBaggage] = useState<string[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<Record<string, string>>({});
+
+  const seatPriceMap = useMemo(() => {
+    const map = new Map<string, number>();
+    ancillaries?.seats.forEach(segment => {
+      segment.rows.forEach(row => {
+        row.seats.forEach(seat => {
+          map.set(`${segment.segmentId}-${seat.number}`, seat.price);
+        });
+      });
+    });
+    return map;
+  }, [ancillaries]);
 
   const [passengers, setPassengers] = useState<any[]>(
     Array.from({ length: guestsCount }, () => ({
@@ -161,9 +173,7 @@ export default function FlightCheckoutPage() {
   }, 0);
 
   const seatTotal = Object.entries(selectedSeats).reduce((acc, [segId, seatNum]) => {
-    const segment = ancillaries?.seats.find(s => s.segmentId === segId);
-    const seat = segment?.rows.flatMap(r => r.seats).find(s => s.number === seatNum);
-    return acc + (seat?.price || 0);
+    return acc + (seatPriceMap.get(`${segId}-${seatNum}`) || 0);
   }, 0);
 
   const finalTotal = prebookData.selling_rate + baggageTotal + seatTotal;
