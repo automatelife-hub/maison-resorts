@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "deploy": "firebase deploy --only hosting"
+    "liteapi:health": "node scripts/liteapi-healthcheck.js",
+    "deploy": "firebase deploy --only hosting",
+    "liteapi:health": "node scripts/liteapi-healthcheck.js",
+    "liteapi:smoke": "node scripts/tests/liteapi-smoke-check.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
