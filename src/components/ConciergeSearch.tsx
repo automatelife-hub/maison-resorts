@@ -51,7 +51,7 @@ export function ConciergeSearch() {
 
     for (const trace of traces) {
       setThoughtTrace(prev => [...prev, trace]);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 100));
     }
 
     router.push(`/results?destination=${encodeURIComponent(query)}&vibe=semantic`);
