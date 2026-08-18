@@ -26,31 +26,90 @@ const mapOccupancies = (occupancies: any[]) => {
   }));
 };
 
+const VIBES = ['Quiet Luxury', 'Barefoot Luxury', 'Slow Mode', 'Heritage Haven'];
+
 // Hotel Search & Details
 export async function searchHotels(
-  destination: string, 
-  checkInDate: string, 
-  checkOutDate: string, 
+  destination: string,
+  checkInDate: string,
+  checkOutDate: string,
   occupancies: any[],
   placeId?: string
 ) {
   try {
-    const sdkParams: any = {
+    // Step 1: Resolve coordinates from placeId or destination text
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    if (placeId) {
+      const res = await fetch(`${LITEAPI_BASE_URL}/data/places/${placeId}`, { headers: getHeaders() });
+      if (res.ok) {
+        const json = await res.json();
+        const p = json.data;
+        latitude = p?.latitude ?? p?.lat ?? null;
+        longitude = p?.longitude ?? p?.lng ?? null;
+      }
+    }
+
+    if (!latitude || !longitude) {
+      const res = await fetch(`${LITEAPI_BASE_URL}/data/places?textQuery=${encodeURIComponent(destination)}`, { headers: getHeaders() });
+      if (res.ok) {
+        const json = await res.json();
+        const first = Array.isArray(json.data) ? json.data[0] : json.data;
+        if (first) {
+          latitude = first.latitude ?? first.lat ?? null;
+          longitude = first.longitude ?? first.lng ?? null;
+          // If the place record only has a placeId but no coords, fetch detail
+          if ((!latitude || !longitude) && first.placeId) {
+            const detailRes = await fetch(`${LITEAPI_BASE_URL}/data/places/${first.placeId}`, { headers: getHeaders() });
+            if (detailRes.ok) {
+              const detail = await detailRes.json();
+              const d = detail.data;
+              latitude = d?.latitude ?? d?.lat ?? null;
+              longitude = d?.longitude ?? d?.lng ?? null;
+            }
+          }
+        }
+      }
+    }
+
+    if (!latitude || !longitude) {
+      console.error('[searchHotels] Could not resolve coordinates for:', destination, placeId);
+      return { data: [] };
+    }
+
+    // Step 2: Get hotel IDs in a 5 km radius
+    const hotelsRes = await fetch(
+      `${LITEAPI_BASE_URL}/data/hotels?latitude=${latitude}&longitude=${longitude}&radius=5000&limit=50`,
+      { headers: getHeaders() }
+    );
+    if (!hotelsRes.ok) {
+      console.error('[searchHotels] /data/hotels failed:', hotelsRes.status);
+      return { data: [] };
+    }
+    const hotelsJson = await hotelsRes.json();
+    let hotelIds: string[] = [];
+    if (hotelsJson.data?.HotelIds) {
+      hotelIds = hotelsJson.data.HotelIds.split(',').map((id: string) => id.trim()).filter(Boolean);
+    } else if (Array.isArray(hotelsJson.data)) {
+      hotelIds = hotelsJson.data.map((h: any) => h.id || h.hotelId).filter(Boolean);
+    }
+
+    if (hotelIds.length === 0) {
+      console.warn('[searchHotels] No hotel IDs found near', latitude, longitude);
+      return { data: [] };
+    }
+
+    // Step 3: Get rates for those IDs
+    const result = await liteApi.getFullRates({
+      hotelIds: hotelIds.slice(0, 50),
       checkin: checkInDate,
       checkout: checkOutDate,
       currency: 'USD',
       guestNationality: 'US',
       occupancies: mapOccupancies(occupancies),
-      includeHotelData: true
-    };
-
-    if (placeId) {
-      sdkParams.placeId = placeId;
-    } else {
-      sdkParams.aiSearch = destination;
-    }
-
-    const result = await liteApi.getFullRates(sdkParams);
+      includeHotelData: true,
+    });
 
     const hotels = result.data?.hotels?.map((hotel: any, index: number) => ({
       id: hotel.id,
@@ -59,15 +118,15 @@ export async function searchHotels(
       address: hotel.address,
       star_rating: hotel.starRating,
       photo: hotel.main_photo || hotel.thumbnail || '',
-      vibe: ['Quiet Luxury', 'Barefoot Luxury', 'Slow Mode', 'Heritage Heritage'][index % 4],
+      vibe: VIBES[index % VIBES.length],
       minPrice: hotel.roomTypes?.[0]?.rates?.[0]?.net_rate
         ? Math.ceil(hotel.roomTypes[0].rates[0].net_rate * LUXURY_MARGIN)
-        : null
+        : null,
     })) || [];
 
     return { data: hotels };
   } catch (e) {
-    console.error('SDK Search Failed:', e);
+    console.error('[searchHotels] Failed:', e);
     return { data: [] };
   }
 }
@@ -201,31 +260,17 @@ export async function getHotelTypes() {
 
 // Semantic Search
 export async function semanticSearch(vibe: string, destination: string) {
-  // v3.0 might use aiSearch in /hotels/rates for this
-  const body = {
-    aiSearch: `${vibe} hotels in ${destination}`,
-    checkin: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0], // 14 days out
-    checkout: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0], // 15 days out
-    currency: 'USD',
-    guestNationality: 'US',
-    occupancies: [{ adults: 2 }],
-    includeHotelData: true
-  };
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error('Failed to perform semantic search');
-  const result = await response.json();
+  const checkin = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+  const checkout = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+  const results = await searchHotels(destination, checkin, checkout, [{ adults: 2 }]);
   return {
-    hotels: result.data?.hotels?.map((hotel: any) => ({
+    hotels: results.data.map((hotel: any) => ({
       id: hotel.id,
       name: hotel.name,
       city: hotel.city,
-      star_rating: hotel.starRating,
-      photo: hotel.main_photo || '',
-    })) || []
+      star_rating: hotel.star_rating,
+      photo: hotel.photo,
+    }))
   };
 }
 
@@ -373,10 +418,10 @@ export async function getMinRates(hotelIds: string[]) {
   });
   if (!response.ok) throw new Error('Failed to get min rates');
   const result = await response.json();
-  return result.hotels?.map((h: any) => ({
+  return (result.data?.hotels || result.hotels || []).map((h: any) => ({
     hotelId: h.id,
     minRate: h.roomTypes?.[0]?.rates?.[0]?.net_rate || null
-  })) || [];
+  }));
 }
 
 // Vouchers
@@ -502,21 +547,9 @@ export async function getFlightBooking(bookingId: string) {
 }
 
 export async function getSmartRecommendations(context?: string) {
-  const body = {
-    aiSearch: context || 'luxury hotel',
-    checkin: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
-    checkout: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
-    currency: 'USD',
-    guestNationality: 'US',
-    occupancies: [{ adults: 2 }],
-    includeHotelData: true
-  };
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) return [];
-  const result = await response.json();
-  return result.data?.hotels?.slice(0, 4) || [];
+  const destination = context || 'Paris';
+  const checkin = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+  const checkout = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+  const results = await searchHotels(destination, checkin, checkout, [{ adults: 2 }]);
+  return results.data.slice(0, 4);
 }
