@@ -27,19 +27,38 @@
 
 ## Authentication
 
-LiteAPI supports two authentication methods:
+LiteAPI requires a valid server-side key. The most common issue is using a public `prod_public_*` key in a server environment; those keys are intended for client-side demos and return `401 Unauthorized` on protected server endpoints.
 
-### Simple Authentication
-Add the API key to every request header:
+### Server-side setup
+
+Use a private server key in `LITEAPI_KEY`:
+
+```env
+LITEAPI_KEY=REPLACE_ME
+LITEAPI_BASE_URL=https://api.liteapi.travel/v3.0
+LITEAPI_BOOK_URL=https://book.liteapi.travel/v3.0
+```
+
+Then send it on every request:
+
 ```http
-X-API-Key: YOUR_API_KEY
+X-API-Key: YOUR_PRIVATE_SERVER_KEY
+```
+
+### Local sandbox fallback only
+
+For local development, you may set `LITEAPI_SANDBOX_KEY` and let the app fall back to it when `NODE_ENV !== 'production'`. Do not ship a public key to production.
+
+```bash
+npm run liteapi:health
+npm run liteapi:smoke
 ```
 
 ### HMAC Authentication (Recommended for Production)
 Use HMAC-signed requests for maximum security. Generate a signature using your secret key + timestamp + request body hash. Ideal for server-side calls handling real payments.
 
 ```http
-X-API-Key: YOUR_API_KEY
+X-API-Key: YOUR_PRIVATE_SERVER_KEY
 X-Signature: <hmac_signature>
 X-Timestamp: <unix_timestamp>
 ```
