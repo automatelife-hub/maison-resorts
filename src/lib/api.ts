@@ -3,7 +3,30 @@ import { COLLECTION_2026 } from '@/data/collection';
 // @ts-ignore
 import liteApiSdk from 'liteapi-node-sdk';
 
-const LITEAPI_KEY = process.env.LITEAPI_KEY || '';
+const isServerSide = typeof window === 'undefined';
+const LOCAL_SANDBOX_KEY = process.env.LITEAPI_SANDBOX_KEY || '';
+const isLocalDev = process.env.NODE_ENV !== 'production' && !process.env.VERCEL_ENV;
+
+const getValidatedLiteApiKey = () => {
+  const configuredKey = process.env.LITEAPI_KEY || '';
+  if (isServerSide && configuredKey.startsWith('prod_public_')) {
+    if (isLocalDev && LOCAL_SANDBOX_KEY) {
+      console.warn('[LiteAPI] Detected a public LiteAPI key on the server. Falling back to LITEAPI_SANDBOX_KEY for local development only.');
+      return LOCAL_SANDBOX_KEY;
+    }
+    const message = '[LiteAPI] Refusing to use a public LiteAPI key on the server. Set LITEAPI_KEY to a private server-side key. For local-only testing, set LITEAPI_SANDBOX_KEY and run in a local dev environment.';
+    console.error(message);
+    throw new Error(message);
+  }
+
+  if (isServerSide && !configuredKey) {
+    console.warn('[LiteAPI] LITEAPI_KEY is not set. Server-side requests will fail until a private LiteAPI key is configured.');
+  }
+
+  return configuredKey;
+};
+
+const LITEAPI_KEY = getValidatedLiteApiKey();
 const LITEAPI_BASE_URL = process.env.LITEAPI_BASE_URL || 'https://api.liteapi.travel/v3.0';
 const LITEAPI_BOOK_URL = process.env.LITEAPI_BOOK_URL || 'https://book.liteapi.travel/v3.0';
 const LITEAPI_VOUCHERS_BASE_URL = process.env.LITEAPI_VOUCHERS_BASE_URL || 'https://da.liteapi.travel';
@@ -12,10 +35,64 @@ const LUXURY_MARGIN = 1.15; // 15% Maison Markup
 
 const liteApi = liteApiSdk(LITEAPI_KEY);
 
+// Runtime validation and header helper
+const validateLiteApiKey = () => {
+  // Server-side safety check: prod_public_ keys are client-only and should not be used for server calls
+  const isServer = typeof window === 'undefined';
+  if (isServer && LITEAPI_KEY && LITEAPI_KEY.startsWith('prod_public_') && process.env.NODE_ENV === 'production') {
+    throw new Error('Invalid LiteAPI key detected on server: a public key (prod_public_) was found. Use a private server key or HMAC authentication for production.');
+  }
+};
+
 const getHeaders = () => ({
   'X-API-Key': LITEAPI_KEY,
   'Content-Type': 'application/json',
 });
+
+// Generic JSON request helper that injects headers, validates key, parses JSON and logs 401s with request-id hints
+async function requestJson(url: string, opts: any = {}) {
+  validateLiteApiKey();
+  const merged: any = Object.assign({}, opts, { headers: Object.assign({}, getHeaders(), opts.headers || {}) });
+  const response = await fetch(url, merged);
+  if (response.status === 401) {
+    const requestId = response.headers.get('x-request-id') || response.headers.get('X-Request-ID') || 'unknown';
+    console.error('[LiteAPI] 401 Unauthorized - check LITEAPI_KEY and permissions. Endpoint:', url, 'Request-ID:', requestId);
+    const bodyText = await response.text().catch(() => '');
+    // avoid logging keys, just show a short snippet of response body
+    console.error('[LiteAPI] Response body (trim):', bodyText.slice(0, 500));
+    throw new Error(`LiteAPI 401 Unauthorized. Request-ID: ${requestId}. Check LITEAPI_KEY and use a private server-side key or HMAC auth.`);
+  }
+  if (!response.ok) {
+    const txt = await response.text().catch(() => '');
+    throw new Error(`LiteAPI request failed: ${response.status} ${response.statusText} - ${txt.slice(0, 500)}`);
+  }
+  const json = await response.json().catch(() => null);
+  return json;
+}
+
+const getRequestId = (response: Response) => response.headers.get('X-Request-ID') || response.headers.get('x-request-id') || 'n/a';
+
+const assertLiteApiResponse = async (response: Response, endpoint: string) => {
+  if (response.status === 401) {
+    const requestId = getRequestId(response);
+    const message = `[LiteAPI 401] ${endpoint} was rejected. Request ID: ${requestId}. Check the LiteAPI key permissions and confirm you are using a private server key in LITEAPI_KEY.`;
+    console.error(message);
+    throw new Error(message);
+  }
+
+  if (!response.ok) {
+    const requestId = getRequestId(response);
+    console.error(`[LiteAPI ${response.status}] ${endpoint} failed. Request ID: ${requestId}`);
+  }
+
+  return response;
+};
+
+const fetchLiteApi = async (input: RequestInfo | URL, init?: RequestInit) => {
+  const response = await fetch(input, init);
+  await assertLiteApiResponse(response, typeof input === 'string' ? input : input.toString());
+  return response;
+};
 
 // Map occupancies to SDK format
 const mapOccupancies = (occupancies: any[]) => {
@@ -42,7 +119,7 @@ export async function searchHotels(
     let longitude: number | null = null;
 
     if (placeId) {
-      const res = await fetch(`${LITEAPI_BASE_URL}/data/places/${placeId}`, { headers: getHeaders() });
+      const res = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/places/${placeId}`, { headers: getHeaders() });
       if (res.ok) {
         const json = await res.json();
         const p = json.data;
@@ -52,7 +129,7 @@ export async function searchHotels(
     }
 
     if (!latitude || !longitude) {
-      const res = await fetch(`${LITEAPI_BASE_URL}/data/places?textQuery=${encodeURIComponent(destination)}`, { headers: getHeaders() });
+      const res = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/places?textQuery=${encodeURIComponent(destination)}`, { headers: getHeaders() });
       if (res.ok) {
         const json = await res.json();
         const first = Array.isArray(json.data) ? json.data[0] : json.data;
@@ -61,7 +138,7 @@ export async function searchHotels(
           longitude = first.longitude ?? first.lng ?? null;
           // If the place record only has a placeId but no coords, fetch detail
           if ((!latitude || !longitude) && first.placeId) {
-            const detailRes = await fetch(`${LITEAPI_BASE_URL}/data/places/${first.placeId}`, { headers: getHeaders() });
+            const detailRes = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/places/${first.placeId}`, { headers: getHeaders() });
             if (detailRes.ok) {
               const detail = await detailRes.json();
               const d = detail.data;
@@ -79,7 +156,7 @@ export async function searchHotels(
     }
 
     // Step 2: Get hotel IDs in a 5 km radius
-    const hotelsRes = await fetch(
+    const hotelsRes = await fetchLiteApi(
       `${LITEAPI_BASE_URL}/data/hotels?latitude=${latitude}&longitude=${longitude}&radius=5000&limit=50`,
       { headers: getHeaders() }
     );
@@ -150,7 +227,7 @@ export async function getHotelDetails(hotelId: string): Promise<{ data: HotelDat
     };
   }
 
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/hotel?hotelId=${hotelId}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/hotel?hotelId=${hotelId}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get hotel details');
   const result = await response.json();
   const hotel = result.data;
@@ -221,7 +298,7 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
 
 // Reviews & Sentiment
 export async function getReviews(hotelId: string, getSentiment: boolean = false) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/reviews?hotelId=${hotelId}&getSentiment=${getSentiment}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/reviews?hotelId=${hotelId}&getSentiment=${getSentiment}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get reviews');
   const result = await response.json();
   return result.data || [];
@@ -229,7 +306,7 @@ export async function getReviews(hotelId: string, getSentiment: boolean = false)
 
 // Currency
 export async function getCurrencies(): Promise<Currency[]> {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/currencies`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/currencies`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get currencies');
   const result = await response.json();
   return result.data?.map((c: any) => ({
@@ -241,7 +318,7 @@ export async function getCurrencies(): Promise<Currency[]> {
 
 // Facilities & Hotel Types
 export async function getFacilities(): Promise<Facility[]> {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/facilities`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/facilities`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get facilities');
   const result = await response.json();
   return result.data?.map((f: any) => ({
@@ -252,7 +329,7 @@ export async function getFacilities(): Promise<Facility[]> {
 }
 
 export async function getHotelTypes() {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/hotelTypes`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/hotelTypes`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get hotel types');
   const result = await response.json();
   return result.data || [];
@@ -277,7 +354,7 @@ export async function semanticSearch(vibe: string, destination: string) {
 // Bookings
 export async function prebook(rateId: string) {
   const body = { offerId: rateId };
-  const response = await fetch(`${LITEAPI_BOOK_URL}/rates/prebook`, {
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}/rates/prebook`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -290,7 +367,7 @@ export async function prebook(rateId: string) {
 export async function createPaymentIntent(prebookId: string, type: 'hotel' | 'flight' = 'hotel') {
   const endpoint = type === 'hotel' ? '/payments/intent' : '/flights/payments/intent';
   const body = { prebookId };
-  const response = await fetch(`${LITEAPI_BOOK_URL}${endpoint}`, {
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}${endpoint}`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -321,7 +398,7 @@ export async function book(
     },
     paymentIntentId,
   };
-  const response = await fetch(`${LITEAPI_BOOK_URL}/rates/book`, {
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}/rates/book`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -332,21 +409,21 @@ export async function book(
 }
 
 export async function listBookings() {
-  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}/bookings`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to list bookings');
   const result = await response.json();
   return result.data || [];
 }
 
 export async function getBooking(bookingId: string) {
-  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings/${bookingId}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}/bookings/${bookingId}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get booking');
   const result = await response.json();
   return result.data;
 }
 
 export async function cancelBooking(bookingId: string) {
-  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings/${bookingId}`, {
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}/bookings/${bookingId}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify({ status: 'cancelled' }),
@@ -358,7 +435,7 @@ export async function cancelBooking(bookingId: string) {
 
 export async function amendBooking(bookingId: string, guestName: string, guestEmail: string) {
   const body = { guest_name: guestName, guest_email: guestEmail };
-  const response = await fetch(`${LITEAPI_BOOK_URL}/bookings/${bookingId}/amend`, {
+  const response = await fetchLiteApi(`${LITEAPI_BOOK_URL}/bookings/${bookingId}/amend`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -370,14 +447,14 @@ export async function amendBooking(bookingId: string, guestName: string, guestEm
 
 // Places & Search
 export async function searchPlaces(query: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/places?textQuery=${encodeURIComponent(query)}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/places?textQuery=${encodeURIComponent(query)}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to search places');
   const result = await response.json();
   return result.data || [];
 }
 
 export async function getPlaceDetails(placeId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/places/${placeId}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/places/${placeId}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get place details');
   const result = await response.json();
   return result.data;
@@ -385,14 +462,14 @@ export async function getPlaceDetails(placeId: string) {
 
 // Explore/Discovery
 export async function getCountries(): Promise<Country[]> {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/countries`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/countries`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get countries');
   const result = await response.json();
   return result.data || [];
 }
 
 export async function getCities(countryCode: string): Promise<City[]> {
-  const response = await fetch(`${LITEAPI_BASE_URL}/data/cities?countryCode=${countryCode}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/data/cities?countryCode=${countryCode}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get cities');
   const result = await response.json();
   return result.data?.map((c: any) => ({
@@ -411,7 +488,7 @@ export async function getMinRates(hotelIds: string[]) {
     currency: 'USD',
     occupancies: [{ adults: 2 }]
   };
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/hotels/rates`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -426,27 +503,27 @@ export async function getMinRates(hotelIds: string[]) {
 
 // Vouchers
 export async function getVouchers() {
-  const response = await fetch(`${LITEAPI_VOUCHERS_BASE_URL}/vouchers`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_VOUCHERS_BASE_URL}/vouchers`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get vouchers');
   return response.json();
 }
 
 export async function getGuestVouchers(guestId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/guests/${guestId}/vouchers`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/guests/${guestId}/vouchers`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get guest vouchers');
   const result = await response.json();
   return result.data;
 }
 
 export async function applyVoucher(voucherCode: string) {
-  const response = await fetch(`${LITEAPI_VOUCHERS_BASE_URL}/vouchers/${voucherCode}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_VOUCHERS_BASE_URL}/vouchers/${voucherCode}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to apply voucher');
   return response.json();
 }
 
 // Loyalty
 export async function getLoyaltyInfo(guestId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/guests/${guestId}/loyalty-points`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/guests/${guestId}/loyalty-points`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get loyalty info');
   const result = await response.json();
   return result.data;
@@ -454,7 +531,7 @@ export async function getLoyaltyInfo(guestId: string) {
 
 export async function redeemLoyaltyPoints(guestId: string, points: number) {
   const body = { points };
-  const response = await fetch(`${LITEAPI_BASE_URL}/guests/${guestId}/loyalty-points/redeem`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/guests/${guestId}/loyalty-points/redeem`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -479,7 +556,7 @@ export async function searchFlights(params: {
     cabinClass: params.cabinClass || 'ECONOMY',
     currency: params.currency || 'USD'
   };
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/rates`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/rates`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -491,7 +568,7 @@ export async function searchFlights(params: {
 
 export async function prebookFlight(flightOfferId: string) {
   const body = { flightOfferId };
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/prebooks`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/prebooks`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -502,7 +579,7 @@ export async function prebookFlight(flightOfferId: string) {
 }
 
 export async function getFlightAncillaries(flightOfferId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/ancillaries?flightOfferId=${flightOfferId}`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/ancillaries?flightOfferId=${flightOfferId}`, {
     headers: getHeaders(),
   });
   if (!response.ok) throw new Error('Failed to fetch flight ancillaries');
@@ -512,7 +589,7 @@ export async function getFlightAncillaries(flightOfferId: string) {
 
 export async function bookFlight(prebookId: string, passengers: any[], ancillaries?: any) {
   const body = { prebookId, passengers, ancillaries };
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/bookings`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -523,7 +600,7 @@ export async function bookFlight(prebookId: string, passengers: any[], ancillari
 }
 
 export async function cancelFlight(bookingId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings/${bookingId}`, {
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/bookings/${bookingId}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -533,14 +610,14 @@ export async function cancelFlight(bookingId: string) {
 }
 
 export async function listFlightBookings() {
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/bookings`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to list flight bookings');
   const result = await response.json();
   return result.data || [];
 }
 
 export async function getFlightBooking(bookingId: string) {
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings/${bookingId}`, { headers: getHeaders() });
+  const response = await fetchLiteApi(`${LITEAPI_BASE_URL}/flights/bookings/${bookingId}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get flight booking');
   const result = await response.json();
   return result.data;

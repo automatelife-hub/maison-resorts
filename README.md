@@ -40,15 +40,28 @@ A modern, luxury hotel booking application built with Next.js 16, React 19, Type
 
 ## Environment Setup
 
-Copy `.env.local` and update with your credentials:
+Copy `.env.example` to `.env.local` (or `.env` for local dev) and fill in your credentials:
 
 ```env
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-LITEAPI_KEY=your_liteapi_key
-LITEAPI_BASE_URL=https://api.liteapi.travel/v1
+LITEAPI_KEY=REPLACE_ME
+LITEAPI_SANDBOX_KEY=REPLACE_ME_IF_USING_LOCAL_SANDBOX
+LITEAPI_BASE_URL=https://api.liteapi.travel/v3.0
+LITEAPI_BOOK_URL=https://book.liteapi.travel/v3.0
 LITEAPI_VOUCHERS_BASE_URL=https://da.liteapi.travel
+```
+
+### LiteAPI key requirements
+
+- Use a private server-side LiteAPI key in `LITEAPI_KEY`.
+- Do not use a public `prod_public_*` key on the server; it will fail with 401 during server-side calls.
+- For local sandbox testing only, set `LITEAPI_SANDBOX_KEY` and the app will fall back to it automatically when running in local development.
+- Run the health check to verify the key is valid:
+
+```bash
+npm run liteapi:health
 ```
 
 ## Development
