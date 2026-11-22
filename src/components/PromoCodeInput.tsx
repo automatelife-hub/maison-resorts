@@ -37,20 +37,20 @@ export function PromoCodeInput({ onApply }: PromoCodeInputProps) {
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="Enter promo code"
           disabled={applied}
-          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent disabled:bg-gray-100"
+          className="flex-1 px-4 py-2 border border-gray-200 rounded text-xs focus:outline-none focus:border-gray-400 disabled:bg-gray-150"
         />
         <button
           type="submit"
           disabled={applied}
-          className={`px-6 py-2 rounded-lg font-medium ${
-            applied ? 'bg-green-500 text-white cursor-not-allowed' : 'bg-accent text-luxury hover:bg-opacity-90'
+          className={`px-5 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-colors ${
+            applied ? 'bg-green-600 text-white cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-gray-800'
           }`}
         >
-          {applied ? '✓ Applied' : 'Apply'}
+          {applied ? 'Applied' : 'Apply'}
         </button>
       </div>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      {applied && discount > 0 && <p className="text-green-600 text-sm">Discount: ${discount}</p>}
+      {error && <p className="text-red-650 text-xs">{error}</p>}
+      {applied && discount > 0 && <p className="text-green-655 text-xs">Discount of ${discount} applied</p>}
     </form>
   );
 }

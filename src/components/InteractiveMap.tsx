@@ -14,7 +14,7 @@ export function InteractiveMap() {
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://demotiles.maplibre.org/style.json', // Basic style, can be replaced with custom luxury style
+      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', // Carto Positron (Light/Luxury)
       center: [15, 45], // Central Europe
       zoom: 3,
     });

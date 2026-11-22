@@ -1,19 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
 import { Skeleton } from '@/components/Skeleton';
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { Award, ChevronRight, Sparkles } from 'lucide-react';
+import { Award, ChevronRight } from 'lucide-react';
 import { VoucherVault } from '@/components/VoucherVault';
 
 export default function LoyaltyPage() {
   const { user, loading: authLoading } = useAuth();
   const [loyaltyData, setLoyaltyData] = useState<any>(null);
   const [vouchers, setVouchers] = useState<any[]>([]);
-  const [globalVouchers, setGlobalVouchers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,20 +26,10 @@ export default function LoyaltyPage() {
       try {
         setLoading(true);
         
-        // Fetch from API routes in parallel
-        const [loyaltyRes, globalVouchersRes] = await Promise.all([
-          fetch(`/api/loyalty?guestId=${user.uid}`),
-          fetch('/api/vouchers')
-        ]);
-
-        if (loyaltyRes.ok) {
-          const apiLoyaltyData = await loyaltyRes.json();
+        const response = await fetch(`/api/loyalty?guestId=${user.uid}`);
+        if (response.ok) {
+          const apiLoyaltyData = await response.json();
           setLoyaltyData((prev: any) => ({ ...prev, ...apiLoyaltyData }));
-        }
-
-        if (globalVouchersRes.ok) {
-          const apiGlobalVouchers = await globalVouchersRes.json();
-          setGlobalVouchers(apiGlobalVouchers.data || []);
         }
 
         const { getFirebaseFirestore } = await import('@/lib/firebase');
@@ -54,7 +42,7 @@ export default function LoyaltyPage() {
         if (loyaltySnap.exists()) {
           setLoyaltyData((prev: any) => ({ ...prev, ...loyaltySnap.data() }));
         } else if (!loyaltyData) {
-          setLoyaltyData({ points: 0, tier: 'Heritage Member' });
+          setLoyaltyData({ points: 0, tier: 'Maison Member' });
         }
 
         // Fetch user vouchers from Firestore
@@ -65,11 +53,11 @@ export default function LoyaltyPage() {
           fetchedVouchers.push({ id: doc.id, ...doc.data() });
         });
         
-        // Add some high-fidelity mocks if empty for design demo
+        // Mocks for display
         if (fetchedVouchers.length === 0) {
           fetchedVouchers.push(
-            { id: 'v1', name: 'Winter Sanctuary', code: 'MAISON-WINTER-26', value: 15, discountType: 'percentage', description: 'Exclusive winter reduction' },
-            { id: 'v2', name: 'Alps Heritage', code: 'ALPS-ELITE', value: 250, discountType: 'fixed', description: 'Premium alpine access' }
+            { id: 'v1', name: 'Winter Promotion', code: 'MAISON-WINTER-26', value: 15, discountType: 'percentage', description: 'Exclusive winter discount' },
+            { id: 'v2', name: 'Alps Escapes', code: 'ALPS-ELITE', value: 250, discountType: 'fixed', description: 'Premium alpine resort discount' }
           );
         }
         setVouchers(fetchedVouchers);
@@ -86,11 +74,11 @@ export default function LoyaltyPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="space-y-12">
-        <Skeleton className="h-12 w-1/3 rounded-2xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           <Skeleton className="h-[400px] lg:col-span-2 rounded-[3rem]" />
-           <Skeleton className="h-[400px] rounded-[3rem]" />
+      <div className="space-y-8">
+        <Skeleton className="h-8 w-1/3 rounded bg-gray-100" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           <Skeleton className="h-64 lg:col-span-2 rounded bg-gray-100" />
+           <Skeleton className="h-64 rounded bg-gray-100" />
         </div>
       </div>
     );
@@ -98,10 +86,10 @@ export default function LoyaltyPage() {
 
   if (!user) {
     return (
-      <div className="py-24">
+      <div className="py-16">
         <EmptyState 
           title="Members Only" 
-          description="Please sign in to view your Maison loyalty rewards and vouchers." 
+          description="Please sign in to view your loyalty rewards and vouchers." 
           icon="🔒" 
         />
       </div>
@@ -110,82 +98,56 @@ export default function LoyaltyPage() {
 
   const currentPoints = loyaltyData?.points || 0;
   const nextTierPoints = 5000;
-  const progress = (currentPoints / nextTierPoints) * 100;
+  const progress = Math.min(100, (currentPoints / nextTierPoints) * 100);
 
   return (
-    <div className="space-y-16 pb-24">
+    <div className="space-y-12 text-gray-800">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent mb-4 font-bold">The Member's Maison</h3>
-        <h1 className="text-5xl font-bold text-white italic font-serif tracking-tighter">
-          The Art of <span className="text-accent">Loyalty</span>
+      <div>
+        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1 block">Account Rewards</span>
+        <h1 className="text-3xl font-serif text-gray-900 font-normal">
+          Maison Loyalty Program
         </h1>
-      </motion.div>
+      </div>
 
       {/* The Ascent & Points */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Points & Progress (The Ascent) */}
-        <div className="lg:col-span-2 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] -mr-32 -mt-32" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row gap-16 items-center">
-            {/* The Ascent Visualization */}
-            <div className="relative w-24 h-64 flex items-center justify-center">
-              {/* Track */}
-              <div className="absolute inset-0 w-2 left-1/2 -translate-x-1/2 bg-white/5 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ height: 0 }}
-                  animate={{ height: `${progress}%` }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  className="absolute bottom-0 w-full bg-gradient-to-t from-accent/40 via-accent to-white"
+        {/* Points & Progress Card */}
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-8 relative overflow-hidden shadow-sm flex flex-col justify-between">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            {/* Simple Progress Bar */}
+            <div className="relative w-full md:w-32 flex flex-col items-center">
+              <span className="text-xs font-semibold text-gray-700 mb-2">Tier Progress</span>
+              <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gray-900 rounded-full"
+                  style={{ width: `${progress}%` }}
                 />
               </div>
-              
-              {/* Tiers */}
-              <div className="absolute inset-0 flex flex-col justify-between items-center py-2">
-                {[
-                  { label: 'ELYSIUM', icon: '✦', color: '#fff' },
-                  { label: 'SANCTUARY', icon: '✧', color: '#d4af37' },
-                  { label: 'HERITAGE', icon: '•', color: '#666' }
-                ].map((tier, i) => (
-                  <div key={tier.label} className="relative group/tier flex flex-col items-center">
-                     <div className={`w-10 h-10 rounded-full bg-[#0a0a0a] border border-white/10 flex items-center justify-center text-sm mb-2 shadow-2xl transition-all duration-500 ${i === 2 ? 'border-accent shadow-accent/20' : ''}`}>
-                       <span className={i === 2 ? 'text-accent' : 'text-gray-500'}>{tier.icon}</span>
-                     </div>
-                     <span className="text-[8px] uppercase tracking-widest text-gray-500 font-bold absolute left-12 whitespace-nowrap opacity-0 group-hover/tier:opacity-100 transition-opacity">
-                       {tier.label}
-                     </span>
-                  </div>
-                ))}
-              </div>
+              <span className="text-[10px] text-gray-400 mt-2">{progress.toFixed(0)}% to Next Tier</span>
             </div>
 
             {/* Points Info */}
             <div className="flex-1 text-center md:text-left">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-8 font-bold">Accumulated Heritage</p>
-              <div className="flex items-baseline justify-center md:justify-start gap-4 mb-4">
-                <motion.span 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-8xl font-bold text-white tracking-tighter italic font-serif"
-                >
+              <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Accumulated Points</span>
+              <div className="flex items-baseline justify-center md:justify-start gap-2 mb-3">
+                <span className="text-6xl font-serif font-bold text-gray-900">
                   {currentPoints}
-                </motion.span>
-                <span className="text-accent text-sm font-bold uppercase tracking-widest">PTS</span>
+                </span>
+                <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">PTS</span>
               </div>
-              <p className="text-gray-400 text-sm font-light max-w-sm leading-relaxed mb-8">
-                You are currently in the <span className="text-white font-bold italic">Heritage</span> tier.
-                Complete <span className="text-accent font-bold">1,250 pts</span> more to reach <span className="text-white font-bold italic">Sanctuary</span> status.
+              
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                You are currently in the <span className="text-gray-900 font-semibold">Maison Member</span> tier.
+                Earn <span className="text-gray-900 font-semibold">{nextTierPoints - currentPoints} more points</span> to upgrade.
               </p>
-              <div className="flex gap-4">
-                <button className="bg-accent text-black px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-accent/10">
-                  Redeem Benefits
+              
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                <button className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-colors">
+                  Redeem Rewards
                 </button>
-                <button className="border border-white/10 text-white px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-all">
-                  History
+                <button className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-5 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-colors">
+                  Point History
                 </button>
               </div>
             </div>
@@ -193,47 +155,43 @@ export default function LoyaltyPage() {
         </div>
 
         {/* Benefits Card */}
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 flex flex-col justify-between group overflow-hidden relative">
-          <div className="absolute bottom-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mb-16 -mr-16 group-hover:bg-accent/10 transition-colors" />
-          
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <Award className="text-accent mb-8" size={32} />
-            <h3 className="text-xl font-bold text-white italic font-serif mb-6">Tier Privileges</h3>
-            <ul className="space-y-4">
+            <Award className="text-gray-700 mb-4" size={24} />
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Tier Privileges</h3>
+            <ul className="space-y-3">
               {[
-                'Priority Sanctuary Access',
-                'Complimentary Late Departures',
-                'Heritage Welcome Amenities',
-                'Member-Only Collection Rates'
+                'Priority Resort Booking',
+                'Complimentary Late Check-out',
+                'Welcome Gift in Room',
+                'Member-Only Rates'
               ].map((benefit, i) => (
-                <li key={i} className="flex items-center gap-4 text-xs text-gray-400 group/item">
-                  <span className="text-accent font-bold group-hover/item:translate-x-1 transition-transform">✦</span>
-                  {benefit}
+                <li key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                  <span className="text-gray-400">•</span>
+                  <span>{benefit}</span>
                 </li>
               ))}
             </ul>
           </div>
           
-          <button className="text-[10px] uppercase tracking-widest font-bold text-accent hover:text-white transition-colors mt-12 flex items-center gap-2">
+          <button className="text-xs font-semibold text-gray-900 hover:text-gray-700 transition-colors mt-6 flex items-center gap-1">
             View All Privileges <ChevronRight size={12} />
           </button>
         </div>
       </div>
 
-      {/* Vouchers (The Maison Vault) */}
-      <section className="pt-12">
-        <div className="text-center mb-16">
-           <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent mb-4 font-bold">The Maison Vault</h3>
-           <h2 className="text-5xl font-bold text-white italic font-serif tracking-tighter italic">Your <span className="text-accent">Vouchers</span></h2>
-           <p className="text-[10px] uppercase tracking-[0.3em] text-gray-600 font-bold mt-4">Click to inspect heritage reductions</p>
+      {/* Vouchers Section */}
+      <section className="pt-6">
+        <div className="text-center mb-8">
+           <h2 className="text-2xl font-serif text-gray-900 font-normal mb-1">Your Vouchers</h2>
+           <p className="text-xs text-gray-500">Apply these promo codes during booking checkout</p>
         </div>
 
         {vouchers.length > 0 ? (
           <VoucherVault vouchers={vouchers} />
         ) : (
-          <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-24 text-center">
-             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 text-gray-600">✧</div>
-             <p className="text-gray-500 font-light text-sm uppercase tracking-widest">The vault is currently unoccupied.</p>
+          <div className="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-16 text-center max-w-xl mx-auto">
+             <p className="text-gray-500 text-sm">Your voucher vault is empty.</p>
           </div>
         )}
       </section>

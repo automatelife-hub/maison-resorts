@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { PreferencesProvider } from '@/context/PreferencesContext';
+import { ConciergeChatbot } from './ConciergeChatbot';
 
 // Firebase AuthProvider loaded only in the browser
 const AuthProvider = dynamic(
@@ -14,6 +15,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <PreferencesProvider>
         {children}
+        <ConciergeChatbot />
       </PreferencesProvider>
     </AuthProvider>
   );

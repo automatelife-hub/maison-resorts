@@ -1,245 +1,195 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { RecentSearches } from '@/components/RecentSearches';
-import { Recommendations } from '@/components/Recommendations';
-import { TopDealsCarousel } from '@/components/TopDealsCarousel';
-import { LuxuryHero } from '@/components/LuxuryHero';
-import { Skeleton } from '@/components/Skeleton';
-import { ArrowRight } from 'lucide-react';
-import { PhysicalGalleryWall } from '@/components/PhysicalGalleryWall';
-import { ConciergeSearch } from '@/components/ConciergeSearch';
-import { Plane, Building2, ShieldCheck, Globe } from 'lucide-react';
+import { Calendar, Users, Search } from 'lucide-react';
 
 export default function Home() {
-  const [featuredSpots, setFeaturedSpots] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // Search box state
+  const [destination, setDestination] = useState('Amalfi Coast, Italy');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState('2');
 
   useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const response = await fetch('/api/featured-hotels');
-        if (response.ok) {
-          const data = await response.json();
-          setFeaturedSpots(data);
-        }
-      } catch (err) {
-        console.error('Failed to load featured spots');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFeatured();
+    setCheckIn(new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0]);
+    setCheckOut(new Date(Date.now() + 86400000 * 21).toISOString().split('T')[0]);
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const occupancies = JSON.stringify([{ adults: parseInt(guests) || 2 }]);
+    router.push(`/results?destination=${encodeURIComponent(destination)}&checkInDate=${checkIn}&checkOutDate=${checkOut}&occupancies=${encodeURIComponent(occupancies)}`);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Luxury Remotion-Powered Hero */}
-      <LuxuryHero />
+    <div className="bg-white min-h-screen text-gray-800 font-sans antialiased">
+      {/* Hero Section */}
+      <section className="bg-gray-50 border-b border-gray-200 pt-32 pb-24 text-center">
+        <div className="max-w-4xl mx-auto px-6">
+          <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-serif font-light leading-[1.05] tracking-tight mb-8 max-w-[950px] mx-auto text-monocle-fg italic">
+            Simple and Reliable <br />Resort Bookings.
+          </h1>
+          <p className="text-base md:text-lg text-monocle-muted font-serif italic max-w-[650px] mx-auto mb-16 leading-relaxed">
+            Find the perfect resort for your next trip. Browse top-rated properties, compare direct flight connections, and book instantly.
+          </p>
 
-      {/* Philosophy Section */}
-      <main className="flex-1 bg-white">
-        <section className="py-32 bg-white text-luxury">
-          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
-            {/* Manifesto Content */}
-            <div className="space-y-10">
-              <div className="space-y-4">
-                <span className="text-[10px] uppercase tracking-[0.4em] text-accent font-bold">The Manifesto</span>
-                <h2 className="text-5xl md:text-6xl font-bold text-luxury leading-[1.1] tracking-tighter italic font-serif">
-                  A Shift Toward <br/>
-                  <span className="text-accent not-italic">Conscious Authenticity</span>
-                </h2>
-              </div>
-              <p className="text-gray-500 leading-relaxed text-xl font-light">
-                For 2026, we are redefining the luxury landscape. Move away from generic opulence 
-                and embrace narrative-driven experiences. We feature niche vacation spots across Europe 
-                that prioritize silence, heritage reimagined, and cultural immersion.
-              </p>
-              <Link 
-                href="/explore" 
-                className="inline-block border-b border-accent pb-2 text-luxury font-bold tracking-[0.2em] text-[10px] uppercase hover:text-accent transition-all"
-              >
-                Explore Collection 2026 →
-              </Link>
-            </div>
-            {/* Visuals */}
-            <div className="relative">
-              <div className="grid grid-cols-2 gap-6 relative z-10">
-                <img 
-                  src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800" 
-                  className="rounded-[2.5rem] h-80 w-full object-cover mt-12 shadow-2xl" 
-                  alt="Luxury interior" 
-                />
-                <img 
-                  src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&q=80&w=800" 
-                  className="rounded-[2.5rem] h-80 w-full object-cover shadow-2xl shadow-accent/5" 
-                  alt="Coastal view" 
+          {/* Simple Booking Search Form */}
+          <form onSubmit={handleSearch} className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col md:flex-row max-w-4xl mx-auto text-left overflow-hidden">
+            <div className="flex-1 p-5 border-b md:border-b-0 md:border-r border-gray-200">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Destination</label>
+              <div className="flex items-center gap-2">
+                <Search size={16} className="text-gray-400" />
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="bg-transparent text-sm border-none outline-none w-full text-gray-800"
+                  placeholder="Where are you going?"
+                  required
                 />
               </div>
-              <div className="absolute -bottom-12 -right-12 w-64 h-64 border-r border-b border-accent/20 rounded-[4rem] z-0" />
             </div>
-          </div>
-        </section>
 
-        {/* Logistics of Luxury - NEW SECTION */}
-        <section className="py-48 bg-emerald text-white overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
-             <div className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[150px]" />
-          </div>
+            <div className="flex-1 p-5 border-b md:border-b-0 md:border-r border-gray-200">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Check In</label>
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-gray-400" />
+                <input
+                  type="date"
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  className="bg-transparent text-sm border-none outline-none w-full text-gray-800"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 p-5 border-b md:border-b-0 md:border-r border-gray-200">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Check Out</label>
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-gray-400" />
+                <input
+                  type="date"
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  className="bg-transparent text-sm border-none outline-none w-full text-gray-800"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 p-5 border-b md:border-b-0 border-gray-200">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Guests</label>
+              <div className="flex items-center gap-2">
+                <Users size={16} className="text-gray-400" />
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={guests}
+                  onChange={(e) => setGuests(e.target.value)}
+                  className="bg-transparent text-sm border-none outline-none w-full text-gray-800"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="bg-monocle-fg hover:bg-monocle-accent text-monocle-bg hover:text-white px-10 py-6 md:py-0 transition-colors uppercase tracking-[0.15em] text-[11px] font-bold">
+              Find Resorts
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* Featured Destinations Grid */}
+      <section className="py-20 max-w-6xl mx-auto px-6">
+        <div>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-monocle-accent mb-6 font-bold block">
+            WHY BOOK WITH US
+          </span>
+          <h2 className="text-4xl md:text-5xl font-serif font-light text-monocle-fg italic mb-8">
+            Seamless Booking for <br />Your Whole Trip.
+          </h2>
+          <p className="text-base text-monocle-muted font-serif italic mb-12 leading-relaxed">
+            We take the hassle out of travel planning. Book both your flights and hotels in one place, with instant confirmations and guaranteed rates.
+          </p>
           
-          <div className="max-w-7xl mx-auto px-12 relative z-10">
-            <div className="text-center mb-32">
-               <h3 className="text-[10px] uppercase tracking-[0.6em] text-accent mb-6 font-bold">Comprehensive Capabilities</h3>
-               <h2 className="text-6xl md:text-8xl font-bold italic font-serif tracking-tighter leading-none">
-                 The Logistics of <br/><span className="text-accent">Luxury</span>
-               </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-20">
+            <div>
+              <h4 className="text-[10px] uppercase tracking-widest text-monocle-fg font-bold mb-3">Global Search</h4>
+              <p className="text-sm text-monocle-muted leading-relaxed font-light">
+                Access direct live inventory from top-rated hotels and airlines worldwide.
+              </p>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-               {/* Voyages (Flights) */}
-               <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[4rem] p-16 group hover:border-accent/40 transition-all duration-700">
-                  <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center text-accent mb-12 group-hover:scale-110 transition-transform">
-                     <Plane size={32} strokeWidth={1.5} />
-                  </div>
-                  <h3 className="text-4xl font-bold italic font-serif mb-6 tracking-tight">Celestial <span className="text-accent">Voyages</span></h3>
-                  <p className="text-gray-400 text-lg leading-relaxed font-light mb-12">
-                    Access 1.5M+ global flight routes including elite commercial cabins and 
-                    private heritage charters. Every connection is monitored by the Maison 
-                    logistics center.
-                  </p>
-                  <ul className="space-y-4 mb-16">
-                    {['Global Route Intelligence', 'Lounge Sanctuary Access', 'Baggage Concierge'].map(item => (
-                      <li key={item} className="flex items-center gap-4 text-xs uppercase tracking-widest text-gray-500">
-                         <div className="w-1 h-1 rounded-full bg-accent" />
-                         {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/flights" className="inline-block bg-white text-luxury px-12 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-2xl">
-                     Book Voyage
-                  </Link>
-               </div>
-
-               {/* Sanctuaries (Hotels) */}
-               <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[4rem] p-16 group hover:border-accent/40 transition-all duration-700">
-                  <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center text-accent mb-12 group-hover:scale-110 transition-transform">
-                     <Building2 size={32} strokeWidth={1.5} />
-                  </div>
-                  <h3 className="text-4xl font-bold italic font-serif mb-6 tracking-tight">Terrestrial <span className="text-accent">Sanctuaries</span></h3>
-                  <p className="text-gray-400 text-lg leading-relaxed font-light mb-12">
-                    Our 2026 collection features over 2 million hand-vetted properties. 
-                    From private islands to high-altitude retreats, we locate the 
-                    precise frequency of your intention.
-                  </p>
-                  <ul className="space-y-4 mb-16">
-                    {['Conscious Vibe Vetting', 'Heritage Verified Rates', 'Elite Status Recognition'].map(item => (
-                      <li key={item} className="flex items-center gap-4 text-xs uppercase tracking-widest text-gray-500">
-                         <div className="w-1 h-1 rounded-full bg-accent" />
-                         {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/results" className="inline-block border border-white/20 text-white px-12 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-luxury transition-all">
-                     Enter Collection
-                  </Link>
-               </div>
-            </div>
-
-            <div className="mt-32 flex justify-center">
-               <div className="flex flex-col md:flex-row items-center gap-12 bg-luxury/50 backdrop-blur-xl px-12 py-8 rounded-[3rem] border border-white/5">
-                  <div className="flex items-center gap-4">
-                     <ShieldCheck className="text-accent" size={20} />
-                     <span className="text-[10px] uppercase tracking-widest font-bold">Maison Unified Protection</span>
-                  </div>
-                  <div className="w-px h-6 bg-white/10 hidden md:block" />
-                  <div className="flex items-center gap-4">
-                     <Globe className="text-accent" size={20} />
-                     <span className="text-[10px] uppercase tracking-widest font-bold">24/7 Global Oversight</span>
-                  </div>
-               </div>
+            <div>
+              <h4 className="text-[10px] uppercase tracking-widest text-monocle-fg font-bold mb-3">Instant Confirmation</h4>
+              <p className="text-sm text-monocle-muted leading-relaxed font-light">
+                No waiting or hidden fees. Confirm your booking instantly with guaranteed rates.
+              </p>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Top Deals Secondary Hero */}
-        <TopDealsCarousel />
-
-        {/* Recommendations Section */}
-        <section className="py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <Recommendations />
-          </div>
-        </section>
-
-        {/* Heritage Stories */}
-        <section className="py-32 bg-gray-50 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-24">
-              <h3 className="text-[10px] uppercase tracking-[0.6em] text-accent mb-6 font-bold">The Heritage Series</h3>
-              <h2 className="text-5xl md:text-7xl font-bold text-luxury italic font-serif tracking-tighter">Stories of <span className="text-accent">Arrival</span></h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Santorini */}
+          <Link href="/results?destination=Santorini" className="group block border border-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <div className="aspect-[4/3] overflow-hidden bg-gray-50">
+              <img
+                src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=800"
+                alt="Santorini, Greece"
+                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+              />
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-              <div className="relative group cursor-pointer">
-                <div className="aspect-[16/9] overflow-hidden rounded-[3rem] shadow-2xl mb-8">
-                  <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" alt="Coastal Story" />
-                </div>
-                <div className="px-4">
-                  <p className="text-[10px] uppercase tracking-widest text-accent font-bold mb-4">Volume 01: Mediterranean Silence</p>
-                  <h4 className="text-3xl font-bold text-luxury italic font-serif mb-4 tracking-tight">The Unspoken Beauty of the Albanian Riviera</h4>
-                  <p className="text-gray-500 font-light leading-relaxed">How a return to primitive luxury is reshaping the southern coast of Europe.</p>
-                </div>
-              </div>
-              <div className="relative group cursor-pointer mt-12 md:mt-24">
-                <div className="aspect-[16/9] overflow-hidden rounded-[3rem] shadow-2xl mb-8">
-                  <img src="https://images.unsplash.com/photo-1517154421773-0529f29ea451?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" alt="Mountain Story" />
-                </div>
-                <div className="px-4">
-                  <p className="text-[10px] uppercase tracking-widest text-accent font-bold mb-4">Volume 02: High-Altitude Recovery</p>
-                  <h4 className="text-3xl font-bold text-luxury italic font-serif mb-4 tracking-tight">Bohinj: The Glacial Answer to Digital Fatigue</h4>
-                  <p className="text-gray-500 font-light leading-relaxed">Why the Julian Alps have become the primary destination for nervous-system restoration.</p>
-                </div>
-              </div>
+            <div className="p-5">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1 block">Greece</span>
+              <h3 className="text-lg font-medium text-gray-900 mb-1 group-hover:text-gray-700 transition-colors">
+                Santorini Private Estate
+              </h3>
+              <p className="text-sm text-gray-500 font-serif italic">From $1,200 / night</p>
             </div>
-          </div>
-        </section>
+          </Link>
 
-        {/* The 2026 Collection (Horizontal Scroll) */}
-        {!loading && featuredSpots.length > 0 && (
-          <PhysicalGalleryWall hotels={featuredSpots} />
-        )}
+          {/* Tuscany */}
+          <Link href="/results?destination=Tuscany" className="group block border border-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <div className="aspect-[4/3] overflow-hidden bg-gray-50">
+              <img
+                src="https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&q=80&w=800"
+                alt="Tuscany, Italy"
+                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+              />
+            </div>
+            <div className="p-5">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1 block">Italy</span>
+              <h3 className="text-lg font-medium text-gray-900 mb-1 group-hover:text-gray-700 transition-colors">
+                Tuscan Vineyard Villa
+              </h3>
+              <p className="text-sm text-gray-500 font-serif italic">From $950 / night</p>
+            </div>
+          </Link>
 
-        {/* Member Testimonials */}
-        <section className="py-48 bg-white overflow-hidden">
-           <div className="max-w-7xl mx-auto px-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-                 <div className="relative">
-                    <div className="w-full aspect-square rounded-[4rem] overflow-hidden shadow-2xl relative z-10">
-                       <img src="https://images.unsplash.com/photo-1522333323-32663f133d62?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover grayscale" alt="Member" />
-                       <div className="absolute inset-0 bg-accent/20 mix-blend-overlay" />
-                    </div>
-                    <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-accent rounded-[2rem] flex items-center justify-center p-8 z-20 shadow-2xl">
-                       <p className="text-luxury font-serif italic text-2xl font-bold text-center leading-tight">Member Verified 2026</p>
-                    </div>
-                 </div>
-                 <div className="space-y-12">
-                    <span className="text-[10px] uppercase tracking-[0.5em] text-accent font-bold">The Member Voice</span>
-                    <h2 className="text-6xl font-bold text-luxury italic font-serif leading-tight tracking-tighter">"A return to the <br/>essence of <span className="text-accent">escape.</span>"</h2>
-                    <p className="text-gray-500 text-xl font-light leading-relaxed italic">
-                       "The Maison concierge didn't just find me a room; they located a frequency. 
-                       My stay in Pantelleria was the first time in a decade I've truly felt 
-                       unconnected from the noise and reconnected to the Earth."
-                    </p>
-                    <div>
-                       <p className="text-luxury font-bold uppercase tracking-widest text-[10px]">Elena Von Heritage</p>
-                       <p className="text-gray-400 uppercase tracking-[0.2em] text-[8px] mt-2">Maison Elysium Member</p>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </section>
-      </main>
+          {/* Bali */}
+          <Link href="/results?destination=Bali" className="group block border border-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <div className="aspect-[4/3] overflow-hidden bg-gray-50">
+              <img
+                src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800"
+                alt="Bali, Indonesia"
+                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+              />
+            </div>
+            <div className="p-5">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1 block">Indonesia</span>
+              <h3 className="text-lg font-medium text-gray-900 mb-1 group-hover:text-gray-700 transition-colors">
+                Ubud Rainforest Retreat
+              </h3>
+              <p className="text-sm text-gray-500 font-serif italic">From $1,100 / night</p>
+            </div>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

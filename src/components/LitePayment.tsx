@@ -49,13 +49,13 @@ function CheckoutForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentElement />
       {errorMessage && (
-        <div className="text-red-500 text-xs mt-2 font-medium bg-red-50 p-3 rounded-xl border border-red-100">
+        <div className="text-red-650 text-xs mt-2 font-medium bg-red-50 p-3 rounded border border-red-100">
           {errorMessage}
         </div>
       )}
       <button
         disabled={isProcessing || !stripe || !elements}
-        className="w-full bg-luxury text-accent font-bold py-4 rounded-xl hover:bg-black transition-all uppercase tracking-widest text-[10px] shadow-lg disabled:opacity-50"
+        className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-2.5 rounded text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
       >
         {isProcessing ? 'Verifying...' : `Pay ${currency} ${amount}`}
       </button>
@@ -98,16 +98,16 @@ export function LitePayment({
 
   if (!clientSecret) {
     return (
-      <div className="h-48 flex flex-col items-center justify-center space-y-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-        <p className="text-[10px] uppercase tracking-widest text-gray-400">Initializing Secure Gateway</p>
+      <div className="h-40 flex flex-col items-center justify-center space-y-3 bg-gray-50 rounded border border-dashed border-gray-200">
+        <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Initializing Secure Gateway</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-      <h3 className="text-[10px] uppercase tracking-widest text-accent mb-6">Secure Payment Gateway</h3>
+    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 className="text-xs uppercase tracking-wider text-gray-450 font-bold mb-4">Payment Method</h3>
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
         <CheckoutForm onSuccess={onSuccess} amount={amount} currency={currency} />
       </Elements>

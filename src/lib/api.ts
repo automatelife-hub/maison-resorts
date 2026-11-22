@@ -25,13 +25,85 @@ const getHeaders = (body?: any) => {
   return headers;
 };
 
-// Map occupancies to SDK format
-const mapOccupancies = (occupancies: any[]) => {
-  return occupancies.map(occ => ({
-    rooms: occ.rooms || 1,
-    adults: occ.adults,
-    children: occ.childrenAges || occ.children || []
-  }));
+// Adjust checkin and checkout dates safely
+function adjustDates(checkin?: string, checkout?: string): { checkin: string, checkout: string } {
+  const today = new Date();
+  
+  const formatDate = (date: Date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  let checkinDate: Date;
+  if (checkin) {
+    checkinDate = new Date(checkin);
+    if (isNaN(checkinDate.getTime())) {
+      checkinDate = tomorrow;
+    }
+  } else {
+    checkinDate = tomorrow;
+  }
+
+  const minCheckin = new Date();
+  minCheckin.setDate(today.getDate() + 1);
+  minCheckin.setHours(0, 0, 0, 0);
+  
+  const checkinCompare = new Date(checkinDate);
+  checkinCompare.setHours(0, 0, 0, 0);
+
+  if (checkinCompare < minCheckin) {
+    checkinDate = minCheckin;
+  }
+
+  let checkoutDate: Date;
+  if (checkout) {
+    checkoutDate = new Date(checkout);
+    if (isNaN(checkoutDate.getTime())) {
+      checkoutDate = new Date(checkinDate);
+      checkoutDate.setDate(checkinDate.getDate() + 2); // Default 2 nights stay
+    }
+  } else {
+    checkoutDate = new Date(checkinDate);
+    checkoutDate.setDate(checkinDate.getDate() + 2);
+  }
+
+  const checkoutCompare = new Date(checkoutDate);
+  checkoutCompare.setHours(0, 0, 0, 0);
+  const checkinCompareFinal = new Date(checkinDate);
+  checkinCompareFinal.setHours(0, 0, 0, 0);
+
+  if (checkoutCompare <= checkinCompareFinal) {
+    checkoutDate = new Date(checkinDate);
+    checkoutDate.setDate(checkinDate.getDate() + 1);
+  }
+
+  return {
+    checkin: formatDate(checkinDate),
+    checkout: formatDate(checkoutDate)
+  };
+}
+
+// Map occupancies to SDK format safely
+const mapOccupancies = (occupancies?: any[]): any => {
+  if (!occupancies || !Array.isArray(occupancies) || occupancies.length === 0) {
+    return [{ rooms: 1, adults: 2, children: [] }];
+  }
+  return occupancies.map(occ => {
+    if (!occ || typeof occ !== 'object') {
+      return { rooms: 1, adults: 2, children: [] };
+    }
+    const adults = typeof occ.adults === 'number' ? occ.adults : parseInt(occ.adults || occ.guests || '2', 10) || 2;
+    const rawChildren = occ.childrenAges || occ.children || [];
+    const children = Array.isArray(rawChildren) 
+      ? rawChildren.map((c: any) => typeof c === 'number' ? c : parseInt(c, 10)).filter((c: number) => !isNaN(c))
+      : [];
+    return { rooms: occ.rooms || 1, adults, children };
+  });
 };
 
 // Hotel Search & Details
@@ -40,28 +112,66 @@ export async function searchHotels(
   checkInDate: string, 
   checkOutDate: string, 
   occupancies: any[],
-  placeId?: string
+  placeId?: string,
+  currency: string = 'USD'
 ) {
+  const { checkin, checkout } = adjustDates(checkInDate, checkOutDate);
+  const mappedOccupancies = mapOccupancies(occupancies);
+  
+  const lowerDest = (destination || '').toLowerCase();
+  const matchingCurated = COLLECTION_2026.filter(item => {
+    if (lowerDest === 'europe' || lowerDest === 'all' || !destination) {
+      return true;
+    }
+    return item.location.toLowerCase().includes(lowerDest) ||
+           item.name.toLowerCase().includes(lowerDest) ||
+           (item.vibe && item.vibe.toLowerCase().includes(lowerDest));
+  }).map(item => ({
+    id: item.id,
+    name: item.name,
+    city: item.location.split(',')[0],
+    address: item.location,
+    star_rating: 5,
+    photo: item.image,
+    vibe: item.vibe || 'Quiet Luxury',
+    minPrice: item.price
+  }));
+
   try {
     const sdkParams: any = {
-      checkin: checkInDate,
-      checkout: checkOutDate,
-      currency: 'USD',
+      checkin,
+      checkout,
+      currency,
       guestNationality: 'US',
-      occupancies: mapOccupancies(occupancies),
+      occupancies: mappedOccupancies,
       includeHotelData: true
     };
 
     if (placeId) {
       sdkParams.placeId = placeId;
-    } else {
-      sdkParams.aiSearch = destination;
+    } else if (destination && destination.toLowerCase() !== 'europe' && destination.toLowerCase() !== 'all') {
+      try {
+        const places = await searchPlaces(destination);
+        if (places && places.length > 0) {
+          sdkParams.placeId = places[0].id || places[0].placeId;
+        }
+      } catch (err) {
+        console.warn('[SDK] Place resolution failed:', err);
+      }
+    }
+    
+    if (!sdkParams.placeId) {
+      sdkParams.aiSearch = destination || 'Europe';
     }
 
-    const result = (await liteApi.getFullRates(sdkParams)) as any;
+    const result = await Promise.race([
+      liteApi.getFullRates(sdkParams),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('LiteAPI search request timed out')), 6000))
+    ]) as any;
     
     if (result.status !== 'success' || !result.data) {
-      throw new Error(result.error || 'Failed to fetch rates from SDK');
+      console.warn('[SDK] searchHotels API returned failure:', result.error || result.errors);
+      return { data: matchingCurated.length > 0 ? matchingCurated : getAllCurated() };
     }
 
     const ratesMap = new Map();
@@ -84,16 +194,35 @@ export async function searchHotels(
         address: hotel.address,
         star_rating: hotel.rating ? Math.round(hotel.rating / 2) : 5,
         photo: hotel.main_photo || hotel.thumbnail || '',
-        vibe: ['Quiet Luxury', 'Barefoot Luxury', 'Slow Mode', 'Heritage Heritage'][index % 4], 
+        vibe: ['Luxury Boutique', 'Beachfront', 'Mountain & Ski', 'Country & Nature', 'Arctic & Winter', 'Desert Retreat', 'Historic & Coast', 'Wellness & Spa', 'Alpine'][index % 9], 
         minPrice
       };
     }) || [];
 
-    return { data: hotels };
+    const mergedHotels = [...matchingCurated, ...hotels];
+
+    if (mergedHotels.length === 0) {
+      return { data: getAllCurated() };
+    }
+
+    return { data: mergedHotels };
   } catch (e) {
-    console.error('SDK Search Failed:', e);
-    throw e; // Propagate the error so API route fallback works!
+    console.error('SDK Search Failed, returning curated collection:', e);
+    return { data: matchingCurated.length > 0 ? matchingCurated : getAllCurated() };
   }
+}
+
+function getAllCurated() {
+  return COLLECTION_2026.map(item => ({
+    id: item.id,
+    name: item.name,
+    city: item.location.split(',')[0],
+    address: item.location,
+    star_rating: 5,
+    photo: item.image,
+    vibe: item.vibe || 'Quiet Luxury',
+    minPrice: item.price
+  }));
 }
 
 export async function getHotelDetails(hotelId: string): Promise<{ data: HotelData }> {
@@ -155,18 +284,25 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
     };
   }
 
+  const { checkin, checkout } = adjustDates(checkInDate, checkOutDate);
+  const mappedOccupancies = mapOccupancies(occupancies);
+
   try {
-    const result = (await liteApi.getFullRates({
-      hotelIds: [hotelId],
-      checkin: checkInDate,
-      checkout: checkOutDate,
-      guestNationality: 'US',
-      currency: 'USD',
-      occupancies: mapOccupancies(occupancies)
-    })) as any;
+    const result = await Promise.race([
+      liteApi.getFullRates({
+        hotelIds: [hotelId],
+        checkin,
+        checkout,
+        guestNationality: 'US',
+        currency: 'USD',
+        occupancies: mappedOccupancies
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('LiteAPI rates request timed out')), 6000))
+    ]) as any;
 
     if (result.status !== 'success' || !result.data) {
-      throw new Error(result.error || 'Failed to fetch rates from SDK');
+      console.warn('[API] getHotelRates failed:', result.error || result.errors);
+      return { data: [] };
     }
 
     const hotel = result.data?.data?.[0];
@@ -185,7 +321,7 @@ export async function getHotelRates(hotelId: string, checkInDate: string, checkO
     };
   } catch (e) {
     console.error('SDK Rates Failed:', e);
-    throw e;
+    return { data: [] };
   }
 }
 
@@ -260,15 +396,24 @@ export async function semanticSearch(vibe: string, destination: string) {
 
 // Bookings
 export async function prebook(rateId: string) {
-  const body = { offerId: rateId };
-  const response = await fetch(`${LITEAPI_BOOK_URL}/rates/prebook`, {
-    method: 'POST',
-    headers: getHeaders(body),
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error('Failed to prebook rate');
-  const result = await response.json();
-  return result.data;
+  try {
+    const result = await (liteApi as any).preBook({ offerId: rateId }) as any;
+    if (result.status !== 'success' || !result.data) {
+      throw new Error(result.error || 'Failed to prebook rate via SDK');
+    }
+    return result.data;
+  } catch (e) {
+    console.warn('SDK Prebook Failed, falling back to manual fetch:', e);
+    const body = { offerId: rateId };
+    const response = await fetch(`${LITEAPI_BOOK_URL}/rates/prebook`, {
+      method: 'POST',
+      headers: getHeaders(body),
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error('Failed to prebook rate');
+    const result = await response.json();
+    return result.data;
+  }
 }
 
 export async function createPaymentIntent(prebookId: string, type: 'hotel' | 'flight' = 'hotel') {
@@ -293,12 +438,24 @@ export async function book(
   },
   paymentIntentId?: string
 ) {
+  // Support both camelCase and snake_case flat parameters AND nested guestDetails object for schema flexibility
   const body = {
     prebookId,
+    prebook_id: prebookId,
     guest_name: guestDetails.name,
+    guestName: guestDetails.name,
     guest_email: guestDetails.email,
+    guestEmail: guestDetails.email,
     guest_phone: guestDetails.phone,
-    payment_intent_id: paymentIntentId, // Explicitly using snake_case as expected by many MoR APIs
+    guestPhone: guestDetails.phone,
+    payment_intent_id: paymentIntentId,
+    paymentIntentId,
+    guestDetails: {
+      firstName: guestDetails.name.split(' ')[0] || '',
+      lastName: guestDetails.name.split(' ').slice(1).join(' ') || guestDetails.name,
+      email: guestDetails.email,
+      phone: guestDetails.phone
+    }
   };
   const response = await fetch(`${LITEAPI_BOOK_URL}/rates/book`, {
     method: 'POST',
@@ -381,25 +538,64 @@ export async function getCities(countryCode: string): Promise<City[]> {
 }
 
 export async function getMinRates(hotelIds: string[]) {
-  const body = {
+  const { checkin, checkout } = adjustDates(undefined, undefined);
+  try {
+    const result = await Promise.race([
+      (liteApi as any).getMinRates({
+        hotelIds,
+        checkin,
+        checkout,
+        guestNationality: 'US',
+        currency: 'USD',
+        occupancies: [{ rooms: 1, adults: 2, children: [] }]
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('LiteAPI min-rates request timed out')), 5000))
+    ]) as any;
+
+    if (result.status !== 'success' || !result.data || !Array.isArray(result.data.data)) {
+      console.warn('[API] getMinRates failed or returned unexpected format, falling back to full rates');
+      return await getMinRatesFallback(hotelIds, checkin, checkout);
+    }
+
+    return result.data.data.map((h: any) => ({
+      hotelId: h.hotelId,
+      minRate: h.price || null
+    }));
+  } catch (err) {
+    console.error('[API] getMinRates error:', err);
+    try {
+      return await getMinRatesFallback(hotelIds, checkin, checkout);
+    } catch (fallbackErr) {
+      console.error('[API] getMinRates fallback failed:', fallbackErr);
+      return hotelIds.map(id => ({ hotelId: id, minRate: null }));
+    }
+  }
+}
+
+async function getMinRatesFallback(hotelIds: string[], checkin: string, checkout: string) {
+  const result = await liteApi.getFullRates({
     hotelIds,
-    checkin: new Date().toISOString().split('T')[0],
-    checkout: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    checkin,
+    checkout,
     guestNationality: 'US',
     currency: 'USD',
-    occupancies: [{ adults: 2 }]
-  };
-  const response = await fetch(`${LITEAPI_BASE_URL}/hotels/rates`, {
-    method: 'POST',
-    headers: getHeaders(body),
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error('Failed to get min rates');
-  const result = await response.json();
-  return result.data?.map((h: any) => ({
-    hotelId: h.hotelId,
-    minRate: h.roomTypes?.[0]?.rates?.[0]?.net_rate || null
-  })) || [];
+    occupancies: [{ rooms: 1, adults: 2, children: [] }]
+  }) as any;
+
+  if (result.status !== 'success' || !result.data || !Array.isArray(result.data.data)) {
+    return hotelIds.map(id => ({ hotelId: id, minRate: null }));
+  }
+
+  const ratesMap = new Map();
+  for (const item of result.data.data) {
+    const minPrice = item.roomTypes?.[0]?.rates?.[0]?.net_rate || null;
+    ratesMap.set(item.hotelId, minPrice);
+  }
+
+  return hotelIds.map(id => ({
+    hotelId: id,
+    minRate: ratesMap.get(id) || null
+  }));
 }
 
 // Vouchers
@@ -452,11 +648,29 @@ export async function searchFlights(params: {
   cabinClass?: 'ECONOMY' | 'PREMIUM_ECONOMY' | 'BUSINESS' | 'FIRST';
   currency?: string;
 }) {
+  const legs = [
+    {
+      origin: params.origin,
+      destination: params.destination,
+      date: params.departureDate
+    }
+  ];
+
+  if (params.returnDate) {
+    legs.push({
+      origin: params.destination,
+      destination: params.origin,
+      date: params.returnDate
+    });
+  }
+
   const body = {
-    ...params,
+    legs,
+    adults: params.adults || 1,
     cabinClass: params.cabinClass || 'ECONOMY',
     currency: params.currency || 'USD'
   };
+
   const response = await fetch(`${LITEAPI_BASE_URL}/flights/rates`, {
     method: 'POST',
     headers: getHeaders(body),
@@ -464,12 +678,49 @@ export async function searchFlights(params: {
   });
   if (!response.ok) throw new Error('Failed to search flights');
   const result = await response.json();
-  return result.data || [];
+  
+  const resultObj = result.data?.['0'] || result.data;
+  const mappedFlights: any[] = [];
+
+  if (resultObj && Array.isArray(resultObj.journeys)) {
+    for (const journey of resultObj.journeys) {
+      if (!journey.offers || journey.offers.length === 0 || !journey.segments || journey.segments.length === 0) {
+        continue;
+      }
+
+      const firstSegment = journey.segments[0];
+      const lastSegment = journey.segments[journey.segments.length - 1];
+
+      const totalMinutes = journey.totalDuration?.minutes || 0;
+      const durationStr = totalMinutes 
+        ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m` 
+        : '';
+
+      for (const offer of journey.offers) {
+        const rawPrice = offer.pricing?.display?.total || 0;
+        const price = Math.ceil(rawPrice * LUXURY_MARGIN);
+
+        mappedFlights.push({
+          id: offer.offerId,
+          airline: firstSegment.carrier?.marketingName || firstSegment.carrier?.marketingCode || 'Unknown Airline',
+          departureTime: firstSegment.departureTime?.replace('T', ' ').substring(0, 16) || '',
+          arrivalTime: lastSegment.arrivalTime?.replace('T', ' ').substring(0, 16) || '',
+          origin: firstSegment.originCode || '',
+          destination: lastSegment.destinationCode || '',
+          duration: durationStr || 'Direct',
+          cabinClass: offer.fare?.family || params.cabinClass || 'ECONOMY',
+          price: price
+        });
+      }
+    }
+  }
+
+  return mappedFlights;
 }
 
 export async function prebookFlight(flightOfferId: string) {
   const body = { flightOfferId };
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/prebooks`, {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/prebook`, {
     method: 'POST',
     headers: getHeaders(body),
     body: JSON.stringify(body),
@@ -490,7 +741,7 @@ export async function getFlightAncillaries(flightOfferId: string) {
 
 export async function bookFlight(prebookId: string, passengers: any[], ancillaries?: any) {
   const body = { prebookId, passengers, ancillaries };
-  const response = await fetch(`${LITEAPI_BASE_URL}/flights/bookings`, {
+  const response = await fetch(`${LITEAPI_BASE_URL}/flights/book`, {
     method: 'POST',
     headers: getHeaders(body),
     body: JSON.stringify(body),
