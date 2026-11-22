@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const hotel = result.data;
 
     if (!hotel) {
-       return Response.json({ error: 'Sanctuary not found' }, { status: 404 });
+       return Response.json({ error: 'Hotel not found' }, { status: 404 });
     }
 
     return Response.json({

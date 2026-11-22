@@ -8,8 +8,8 @@ export default function Footer() {
               MAISON <span className="text-accent">Resorts</span>
             </h3>
             <p className="text-gray-500 text-xs leading-relaxed uppercase tracking-widest">
-              Facilitating the voyage, honoring the heritage. 
-              Discover conscious authenticity in every stay.
+              Simple and reliable hotel and flight bookings.
+              Find the perfect resort for your next trip.
             </p>
             <div className="flex gap-4">
                {['TW', 'IG', 'LI'].map(social => (
@@ -21,28 +21,28 @@ export default function Footer() {
           </div>
           
           <div>
-            <h4 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold">The Collection</h4>
+            <h4 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold">Explore Resorts</h4>
             <ul className="space-y-4 text-[10px] uppercase tracking-widest font-bold">
               <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Destinations</a></li>
-              <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Niche Spots 2026</a></li>
-              <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Heritage Sanctuaries</a></li>
-              <li><a href="/journal" className="text-gray-500 hover:text-white transition-colors">Editorial Journal</a></li>
+              <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Featured Getaways</a></li>
+              <li><a href="/explore" className="text-gray-500 hover:text-white transition-colors">Resort Directory</a></li>
+              <li><a href="/journal" className="text-gray-500 hover:text-white transition-colors">Travel Guides</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold">Voyager's Portal</h4>
+            <h4 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold">Customer Portal</h4>
             <ul className="space-y-4 text-[10px] uppercase tracking-widest font-bold">
-              <li><a href="/account/bookings" className="text-gray-500 hover:text-white transition-colors">My Voyages</a></li>
-              <li><a href="/account/loyalty" className="text-gray-500 hover:text-white transition-colors">Loyalty Rewards</a></li>
-              <li><a href="/account/favorites" className="text-gray-500 hover:text-white transition-colors">Curated Wishlist</a></li>
+              <li><a href="/account/bookings" className="text-gray-500 hover:text-white transition-colors">My Bookings</a></li>
+              <li><a href="/account/loyalty" className="text-gray-500 hover:text-white transition-colors">Loyalty Program</a></li>
+              <li><a href="/account/favorites" className="text-gray-500 hover:text-white transition-colors">My Favorites</a></li>
               <li><a href="/account/profile" className="text-gray-500 hover:text-white transition-colors">Account Settings</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold">Newsletter</h4>
-            <p className="text-gray-500 text-[10px] leading-relaxed mb-6 uppercase tracking-widest">Subscribe to receive our latest heritage discoveries.</p>
+            <p className="text-gray-500 text-[10px] leading-relaxed mb-6 uppercase tracking-widest">Subscribe to receive our latest travel deals and resort updates.</p>
             <form className="flex gap-2">
                <input 
                  type="email" 
@@ -60,7 +60,7 @@ export default function Footer() {
           </p>
           <div className="flex gap-8 text-[8px] uppercase tracking-[0.2em] font-bold text-gray-600">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Heritage</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
           </div>
         </div>

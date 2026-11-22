@@ -1,20 +1,19 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Curated Luxury Travel | Maison Resorts 2026',
-  description: 'Explore European niche vacation spots defining 2026. Discover hidden gems from the Albanian Riviera to the Arctic Circle with Maison conscious luxury.',
+  title: 'Explore Destinations | Maison Resorts',
+  description: 'Find and compare top resort destinations. Filter by location, price, and style to find your perfect vacation spot with instant booking.',
   keywords: [
-    'luxury travel Europe 2026',
-    'niche vacation spots',
-    'quiet luxury hotel Europe',
-    'Albanian Riviera luxury',
-    'hidden gems Europe',
-    'Maison resorts',
-    'conscious travel Europe'
+    'resort destinations',
+    'luxury resort search',
+    'hotel collections',
+    'beach resort destinations',
+    'mountain lodging',
+    'Maison resorts explore'
   ].join(', '),
   openGraph: {
-    title: 'Curated Luxury Travel | Maison Resorts',
-    description: 'Discover the European hidden gems defining 2026 travel.',
+    title: 'Explore resort destinations | Maison Resorts',
+    description: 'Find and compare top resort destinations. Filter by location, price, and style to find your perfect vacation spot.',
     images: [{ url: 'https://images.unsplash.com/photo-1580220305417-10c036324200' }],
   }
 };

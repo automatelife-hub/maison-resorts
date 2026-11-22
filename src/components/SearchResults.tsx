@@ -9,7 +9,6 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { usePreferences } from '@/context/PreferencesContext';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { CategoryBar } from '@/components/CategoryBar';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Map, List } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,7 +35,6 @@ export function SearchResults() {
   const destination = searchParams.get('destination') || '';
   const checkInDate = searchParams.get('checkInDate') || '';
   const checkOutDate = searchParams.get('checkOutDate') || '';
-  const guestsParam = searchParams.get('guests');
   const occupanciesParam = searchParams.get('occupancies');
 
   const occupancies = useMemo(() => {
@@ -68,12 +66,12 @@ export function SearchResults() {
           }),
         });
 
-        if (!response.ok) throw new Error('Failed to fetch hotels');
+        if (!response.ok) throw new Error('Failed to fetch properties');
         const data = await response.json();
         setHotels(data.hotels || []);
         setFilteredHotels(data.hotels || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to search hotels');
+        setError(err instanceof Error ? err.message : 'Failed to search properties');
       } finally {
         setLoading(false);
       }
@@ -82,7 +80,7 @@ export function SearchResults() {
     fetchHotels();
   }, [destination, currency]);
 
-  // Airbnb-style category filtering
+  // Category filtering
   useEffect(() => {
     if (activeCategory === 'All') {
       setFilteredHotels(hotels);
@@ -93,11 +91,15 @@ export function SearchResults() {
 
   if (loading) {
     return (
-      <div className="bg-luxury min-h-screen">
+      <div className="bg-white min-h-screen">
         <CategoryBar activeCategory={activeCategory} onSelect={setActiveCategory} />
         <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-           {[1,2,3,4,5,6,7,8].map(i => (
-             <Skeleton key={i} className="h-96 w-full rounded-[2rem] bg-white/5" />
+           {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+             <div key={i} className="border border-gray-150 p-4 rounded-lg">
+               <Skeleton className="h-48 w-full mb-4 rounded bg-gray-100" />
+               <Skeleton className="h-6 w-3/4 mb-2 rounded bg-gray-100" />
+               <Skeleton className="h-4 w-1/2 rounded bg-gray-100" />
+             </div>
            ))}
         </div>
       </div>
@@ -105,88 +107,88 @@ export function SearchResults() {
   }
 
   return (
-    <div className="bg-[#050505] min-h-screen">
+    <div className="bg-white min-h-screen text-gray-805">
       <CategoryBar activeCategory={activeCategory} onSelect={setActiveCategory} />
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 py-10">
         {/* Results Header */}
-        <div className="flex justify-between items-center mb-12">
-          <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
-            {filteredHotels.length} Sanctuaries Found
+        <div className="flex justify-between items-center mb-8">
+          <p className="text-xs font-semibold text-gray-500">
+            {filteredHotels.length} Properties Found
           </p>
           
           <button 
             onClick={() => setViewMode(viewMode === 'grid' ? 'map' : 'grid')}
-            className="bg-accent text-luxury px-6 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-white transition-all shadow-xl shadow-accent/10"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-sm"
           >
-            {viewMode === 'grid' ? <><Map size={14} /> Show Map</> : <><List size={14} /> Show Grid</>}
+            {viewMode === 'grid' ? <><Map size={13} /> Show Map</> : <><List size={13} /> Show Grid</>}
           </button>
         </div>
 
         {filteredHotels.length === 0 ? (
-          <EmptyState title="No results in this category" description="Try selecting 'All' to see our full 2026 collection." icon="🔍" />
+          <EmptyState title="No results in this category" description="Try selecting 'All' to see our full collection." icon="🔍" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <AnimatePresence mode="popLayout">
-              {filteredHotels.map((hotel) => (
-                <motion.div
-                  layout
-                  key={hotel.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Link href={`/hotel/${hotel.id}`} className="group block">
-                    <div className="flex flex-col h-full">
-                      {/* Image Container */}
-                      <div className="relative aspect-square rounded-[2rem] overflow-hidden mb-4 shadow-2xl border border-white/5 group-hover:border-accent/30 transition-all duration-700">
-                        <img 
-                          src={hotel.photo} 
-                          alt={hotel.name} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-90 group-hover:opacity-100" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        
-                        <div className="absolute top-4 right-4">
-                           <FavoriteButton 
-                             hotelId={hotel.id} 
-                             hotelName={hotel.name} 
-                             hotelPhoto={hotel.photo} 
-                           />
-                        </div>
-
-                        {hotel.star_rating > 4 && (
-                          <div className="absolute top-4 left-4">
-                             <div className="bg-accent text-luxury px-3 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest shadow-xl">
-                               Collection Elite
-                             </div>
-                          </div>
-                        )}
+            {filteredHotels.map((hotel) => (
+              <div key={hotel.id} className="border border-gray-100 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow flex flex-col justify-between">
+                <Link href={`/hotel/${hotel.id}`} className="group block flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Image Container */}
+                    <div className="relative aspect-square overflow-hidden bg-gray-50">
+                      <img 
+                        src={hotel.photo} 
+                        alt={hotel.name} 
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500" 
+                      />
+                      
+                      <div className="absolute top-3 right-3" onClick={(e) => e.preventDefault()}>
+                         <FavoriteButton 
+                           hotelId={hotel.id} 
+                           hotelName={hotel.name} 
+                           hotelPhoto={hotel.photo} 
+                         />
                       </div>
 
-                      {/* Content */}
-                      <div className="px-1">
-                         <div className="flex justify-between items-start mb-2">
-                           <h3 className="text-sm font-bold text-white tracking-tight group-hover:text-accent transition-colors truncate pr-4">
-                             {hotel.name}
-                           </h3>
-                           <div className="flex items-center gap-1 shrink-0">
-                             <StarRating rating={hotel.star_rating} size="xs" />
+                      {hotel.star_rating > 4 && (
+                        <div className="absolute top-3 left-3">
+                           <div className="bg-gray-900/90 text-white px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border border-gray-700">
+                             Premium
                            </div>
-                         </div>
-                         <p className="text-[10px] text-gray-500 font-medium mb-4 uppercase tracking-widest italic">{hotel.city}</p>
-                         
-                         <div className="flex items-baseline gap-2 pt-2 border-t border-white/5">
-                            <PriceDisplay price={hotel.minPrice || 0} currency={currency} className="text-sm font-bold text-white" />
-                            <span className="text-[10px] text-gray-600 font-medium uppercase tracking-tighter">/ Voyage</span>
-                         </div>
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+
+                    {/* Content */}
+                    <div className="p-5">
+                       <div className="flex justify-between items-start mb-2 gap-2">
+                         <h3 className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors truncate">
+                           {hotel.name}
+                         </h3>
+                         <div className="shrink-0">
+                           <StarRating rating={hotel.star_rating} size="xs" />
+                         </div>
+                       </div>
+                       <p className="text-xs text-gray-500 mb-2">{hotel.city}</p>
+                       {hotel.vibe && (
+                         <span className="inline-block bg-gray-50 border border-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded">
+                           {hotel.vibe}
+                         </span>
+                       )}
+                    </div>
+                  </div>
+
+                  <div className="p-5 pt-0 mt-auto">
+                    <div className="flex justify-between items-baseline pt-4 border-t border-gray-100">
+                       <div>
+                         <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Rate per night</span>
+                         <PriceDisplay price={hotel.minPrice || 0} currency={currency} className="text-sm font-semibold text-gray-900" />
+                       </div>
+                       <span className="text-xs text-gray-900 font-semibold group-hover:underline">View details</span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
           </div>
         )}
       </div>

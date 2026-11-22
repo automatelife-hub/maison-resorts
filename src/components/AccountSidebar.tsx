@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { 
   Compass, 
   User, 
@@ -16,10 +15,10 @@ import {
 import { useAuth } from '@/context/AuthContext';
 
 const NAV_ITEMS = [
-  { href: '/account/bookings', label: 'Voyages', icon: Compass },
+  { href: '/account/bookings', label: 'Bookings', icon: Compass },
   { href: '/account/profile', label: 'Profile', icon: User },
   { href: '/account/loyalty', label: 'Loyalty', icon: Award },
-  { href: '/account/favorites', label: 'Vault', icon: Heart },
+  { href: '/account/favorites', label: 'Wishlist', icon: Heart },
 ];
 
 export function AccountSidebar() {
@@ -27,90 +26,80 @@ export function AccountSidebar() {
   const { signOutUser, user } = useAuth();
 
   return (
-    <div className="w-72 shrink-0 hidden md:block">
-      <div className="sticky top-32 space-y-8">
-        {/* User Card (Glassmorphism) */}
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-accent/10 transition-colors duration-700" />
-          
+    <div className="w-64 shrink-0 hidden md:block">
+      <div className="sticky top-24 space-y-6">
+        {/* User Card */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-24 rounded-[2rem] bg-accent/20 p-0.5 border border-accent/30 shadow-lg shadow-accent/10 mb-6 relative group/avatar">
+            <div className="w-16 h-16 rounded-full bg-gray-100 p-0.5 border border-gray-200 shadow-inner mb-4 relative flex items-center justify-center overflow-hidden">
               {user?.photoURL ? (
                 <img 
                   src={user.photoURL} 
                   alt={user.displayName || ''} 
-                  className="w-full h-full object-cover rounded-[1.8rem]" 
+                  className="w-full h-full object-cover rounded-full" 
                 />
               ) : (
-                <div className="w-full h-full bg-luxury text-accent flex items-center justify-center text-2xl font-serif italic rounded-[1.8rem] border border-white/5">
+                <div className="w-full h-full bg-gray-800 text-white flex items-center justify-center text-lg font-serif italic rounded-full">
                   {user?.email?.[0].toUpperCase()}
                 </div>
               )}
-              <div className="absolute -bottom-2 -right-2 bg-luxury border border-accent/30 p-1.5 rounded-xl shadow-lg">
-                <ShieldCheck size={12} className="text-accent" />
+              <div className="absolute bottom-0 right-0 bg-white border border-gray-200 p-1 rounded-full shadow-sm">
+                <ShieldCheck size={10} className="text-green-600" />
               </div>
             </div>
             
-            <h2 className="text-white font-bold tracking-tighter italic font-serif text-lg leading-tight">
-              {user?.displayName || 'Voyager'}
+            <h2 className="text-gray-900 font-semibold text-base leading-tight">
+              {user?.displayName || 'Guest'}
             </h2>
-            <p className="text-[8px] uppercase tracking-[0.3em] text-gray-500 font-bold mt-2">
-              Heritage Member
+            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mt-1">
+              Member
             </p>
           </div>
         </div>
 
-        {/* Navigation Cockpit */}
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-4 shadow-2xl">
-          <nav className="space-y-2">
+        {/* Navigation */}
+        <div className="bg-white border border-gray-200 rounded-lg p-2 shadow-sm">
+          <nav className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
               
               return (
                 <Link key={item.href} href={item.href}>
-                  <motion.div
-                    whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.03)' }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-500 group ${
+                  <div
+                    className={`flex items-center justify-between px-4 py-2.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors ${
                       isActive 
-                        ? 'bg-white text-luxury shadow-xl shadow-white/5' 
-                        : 'text-gray-400 hover:text-white'
+                        ? 'bg-gray-100 text-gray-900' 
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <Icon size={16} className={isActive ? 'text-accent' : 'group-hover:text-accent transition-colors'} />
-                      <span className="text-[10px] uppercase tracking-widest font-bold">
-                        {item.label}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <Icon size={14} className={isActive ? 'text-gray-900' : 'text-gray-450'} />
+                      <span>{item.label}</span>
                     </div>
-                    {isActive && (
-                      <motion.div layoutId="active-pill">
-                        <ChevronRight size={14} className="text-accent" />
-                      </motion.div>
-                    )}
-                  </motion.div>
+                    {isActive && <ChevronRight size={12} className="text-gray-550" />}
+                  </div>
                 </Link>
               );
             })}
 
-            <div className="pt-4 mt-4 border-t border-white/5">
+            <div className="pt-2 mt-2 border-t border-gray-150">
               <button
                 onClick={signOutUser}
-                className="w-full flex items-center gap-4 px-6 py-4 text-gray-500 hover:text-red-400 transition-all group"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50/50 rounded transition-colors text-xs font-semibold uppercase tracking-wider"
               >
-                <LogOut size={16} className="group-hover:translate-x-1 transition-transform" />
-                <span className="text-[10px] uppercase tracking-widest font-bold">Sign Out</span>
+                <LogOut size={14} />
+                <span>Sign Out</span>
               </button>
             </div>
           </nav>
         </div>
 
         {/* Status indicator */}
-        <div className="px-8 flex items-center gap-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          <span className="text-[8px] uppercase tracking-[0.2em] text-gray-600 font-bold">
-            Secure Member Connection
+        <div className="px-4 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+            Secure Connection
           </span>
         </div>
       </div>

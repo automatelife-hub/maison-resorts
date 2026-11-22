@@ -1,0 +1,509 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-od-sandbox-shim>(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maison Resorts — Bespoke Luxury Journeys</title>
+    <style>
+        :root {
+            /* Editorial — Monocle Palette */
+            --bg:      oklch(97% 0.012 80);
+            --surface: oklch(99% 0.005 80);
+            --fg:      oklch(20% 0.02 60);
+            --muted:   oklch(48% 0.015 60);
+            --border:  oklch(89% 0.012 80);
+            --accent:  oklch(58% 0.16 35);
+
+            --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            
+            --radius: 0px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+            background-color: var(--bg);
+            color: var(--fg);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            margin: 0;
+            font-weight: 400;
+            line-height: 1.1;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 24px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-family: var(--font-display);
+            font-size: 24px;
+            letter-spacing: -0.01em;
+            text-decoration: none;
+            color: var(--fg);
+        }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+        .nav-links a:hover { color: var(--fg); }
+
+        /* Hero */
+        .hero {
+            padding: 120px 0 80px;
+            text-align: center;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .hero-kicker {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 24px;
+            display: block;
+        }
+        .hero-title {
+            font-size: 72px;
+            max-width: 900px;
+            margin: 0 auto 32px;
+        }
+        .hero-desc {
+            font-size: 20px;
+            color: var(--muted);
+            max-width: 600px;
+            margin: 0 auto 60px;
+            font-family: var(--font-display);
+            font-style: italic;
+        }
+
+        /* Search Interface */
+        .search-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+        .search-field {
+            flex: 1;
+            padding: 24px;
+            border-right: 1px solid var(--border);
+            text-align: left;
+        }
+        .search-field:last-child { border-right: none; }
+        .search-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .search-input {
+            font-family: var(--font-display);
+            font-size: 18px;
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            color: var(--fg);
+        }
+        .search-btn {
+            background: var(--fg);
+            color: var(--bg);
+            border: none;
+            padding: 0 40px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .search-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Sections */
+        .section {
+            padding: 100px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-title {
+            font-size: 40px;
+            margin-bottom: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .section-link {
+            font-size: 14px;
+            color: var(--muted);
+            text-decoration: underline;
+            font-family: var(--font-body);
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        /* Destination Card */
+        .card {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .card-img-wrap {
+            aspect-ratio: 4/5;
+            overflow: hidden;
+            margin-bottom: 24px;
+            background: var(--border);
+        }
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card:hover .card-img {
+            transform: scale(1.05);
+        }
+        .card-meta {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .card-title {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .card-price {
+            font-family: var(--font-display);
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        /* Flight Results */
+        .flight-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 150px 150px 150px;
+            padding: 32px 0;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+        }
+        .flight-row:first-child { border-top: 1px solid var(--border); }
+        .airline-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--border);
+            border-radius: 50%;
+        }
+        .flight-time {
+            font-family: var(--font-display);
+            font-size: 20px;
+        }
+        .flight-info {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 100px 0;
+            background: var(--fg);
+            color: var(--bg);
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 80px;
+        }
+        .footer-logo {
+            font-family: var(--font-display);
+            font-size: 32px;
+            margin-bottom: 32px;
+            display: block;
+        }
+        .footer-col h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 24px;
+            opacity: 0.5;
+        }
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a {
+            color: inherit;
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .footer-links a:hover { opacity: 1; }
+
+        @media (max-width: 1024px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-title { font-size: 56px; }
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .search-box { flex-direction: column; }
+            .search-field { border-right: none; border-bottom: 1px solid var(--border); }
+            .search-btn { height: 60px; width: 100%; }
+            .flight-row { grid-template-columns: 1fr 1fr; gap: 20px; }
+            .hero-title { font-size: 40px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container nav-inner">
+        <a href="#" class="logo">Maison Resorts</a>
+        <div class="nav-links">
+            <a href="#">Destinations</a>
+            <a href="#">Hotels</a>
+            <a href="#">Flights</a>
+            <a href="#">Concierge</a>
+        </div>
+        <a href="#" style="text-decoration: none; color: var(--fg); font-weight: 600; font-size: 14px;">Sign In</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="container">
+        <span class="hero-kicker">ESTABLISHED 2026</span>
+        <h1 class="hero-title">Refined Travel for the Modern Family.</h1>
+        <p class="hero-desc">Experience the world’s most exclusive destinations with a concierge service that understands the nuances of luxury family travel.</p>
+        
+        <div class="search-box">
+            <div class="search-field">
+                <span class="search-label">From</span>
+                <input type="text" class="search-input" value="London, UK">
+            </div>
+            <div class="search-field">
+                <span class="search-label">To</span>
+                <input type="text" class="search-input" value="Amalfi Coast, Italy">
+            </div>
+            <div class="search-field">
+                <span class="search-label">Dates</span>
+                <input type="text" class="search-input" value="Jul 12 — Jul 26">
+            </div>
+            <div class="search-field">
+                <span class="search-label">Guests</span>
+                <input type="text" class="search-input" value="2 Adults, 2 Children">
+            </div>
+            <button class="search-btn">Inquire</button>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">
+            Summer Destinations
+            <a href="#" class="section-link">View the Collection</a>
+        </h2>
+        <div class="grid">
+            <a href="#" class="card">
+                <div class="card-img-wrap">
+                    <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=800" class="card-img" alt="Santorini">
+                </div>
+                <span class="card-meta">Greece</span>
+                <h3 class="card-title">Santorini Private Estate</h3>
+                <span class="card-price">From $1,200 / night</span>
+            </a>
+            <a href="#" class="card">
+                <div class="card-img-wrap">
+                    <img src="https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&q=80&w=800" class="card-img" alt="Tuscany">
+                </div>
+                <span class="card-meta">Italy</span>
+                <h3 class="card-title">Tuscan Vineyard Villa</h3>
+                <span class="card-price">From $950 / night</span>
+            </a>
+            <a href="#" class="card">
+                <div class="card-img-wrap">
+                    <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800" class="card-img" alt="Bali">
+                </div>
+                <span class="card-meta">Indonesia</span>
+                <h3 class="card-title">Ubud Rainforest Retreat</h3>
+                <span class="card-price">From $1,100 / night</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="section" style="background: var(--surface);">
+    <div class="container">
+        <h2 class="section-title">First Class Connections</h2>
+        <div class="flight-list">
+            <div class="flight-row">
+                <div class="airline-logo"></div>
+                <div class="flight-details">
+                    <div class="flight-time">10:45 AM — 08:30 PM</div>
+                    <div class="flight-info">LHR to JFK • First Class • Non-stop</div>
+                </div>
+                <div class="flight-status" style="color: var(--accent);">Direct</div>
+                <div class="flight-price" style="font-family: var(--font-display); font-size: 20px;">$4,200</div>
+                <button style="border: 1px solid var(--fg); background: transparent; padding: 10px 20px; cursor: pointer; font-size: 12px; text-transform: uppercase;">Select</button>
+            </div>
+            <div class="flight-row">
+                <div class="airline-logo"></div>
+                <div class="flight-details">
+                    <div class="flight-time">02:15 PM — 06:45 AM</div>
+                    <div class="flight-info">CDG to HND • La Première • Non-stop</div>
+                </div>
+                <div class="flight-status" style="color: var(--accent);">Direct</div>
+                <div class="flight-price" style="font-family: var(--font-display); font-size: 20px;">$8,400</div>
+                <button style="border: 1px solid var(--fg); background: transparent; padding: 10px 20px; cursor: pointer; font-size: 12px; text-transform: uppercase;">Select</button>
+            </div>
+            <div class="flight-row">
+                <div class="airline-logo"></div>
+                <div class="flight-details">
+                    <div class="flight-time">09:00 AM — 01:30 PM</div>
+                    <div class="flight-info">DXB to MLE • Residence • Non-stop</div>
+                </div>
+                <div class="flight-status" style="color: var(--accent);">Direct</div>
+                <div class="flight-price" style="font-family: var(--font-display); font-size: 20px;">$3,100</div>
+                <button style="border: 1px solid var(--fg); background: transparent; padding: 10px 20px; cursor: pointer; font-size: 12px; text-transform: uppercase;">Select</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;">
+            <div class="card-img-wrap" style="margin-bottom: 0;">
+                <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=800" class="card-img" alt="Family Vacation">
+            </div>
+            <div>
+                <span class="hero-kicker">THE MAISON PHILOSOPHY</span>
+                <h2 style="font-size: 48px; margin-bottom: 32px;">Seamless Travel for the Whole Family.</h2>
+                <p style="font-size: 18px; color: var(--muted); margin-bottom: 40px; font-family: var(--font-display);">We believe that luxury is the absence of friction. Maison Resorts synchronizes your flights, hotels, and transfers in real-time, leaving you with nothing to do but enjoy the journey.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                    <div>
+                        <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Global Access</h4>
+                        <p style="font-size: 14px; color: var(--muted);">Direct inventory from over 500 airlines and 1.2 million luxury properties.</p>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Real-time Precision</h4>
+                        <p style="font-size: 14px; color: var(--muted);">Instant confirmations and rate-lock guarantees for your entire party.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <span class="footer-logo">Maison Resorts</span>
+                <p style="opacity: 0.6; font-size: 14px;">Bespoke travel experiences powered by high-performance intelligence. Redefining the journey for the modern explorer.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Collections</h4>
+                <ul class="footer-links">
+                    <li><a href="#">The Summer Edit</a></li>
+                    <li><a href="#">Winter Escapes</a></li>
+                    <li><a href="#">Family Suites</a></li>
+                    <li><a href="#">Private Aviation</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Concierge Services</a></li>
+                    <li><a href="#">Sustainability</a></li>
+                    <li><a href="#">Partners</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Member Services</a></li>
+                    <li><a href="#">Travel Advisory</a></li>
+                    <li><a href="#">Inquiries</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div style="margin-top: 80px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; opacity: 0.5;">
+            <span>© 2026 MAISON RESORTS GLOBAL</span>
+            <span>MEMBERS ONLY INQUIRIES: +1 (800) MAISON-1</span>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
