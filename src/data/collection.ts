@@ -4,72 +4,72 @@ export const COLLECTION_2026 = [
     name: 'Arctic TreeHouse',
     location: 'Rovaniemi, Finland',
     image: 'https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Barefoot Luxury',
+    vibe: 'Arctic & Winter',
     price: 850,
-    description: 'Nesting in the Arctic circle, where architecture meets the Aurora.'
+    description: 'Nesting in the Arctic circle, where modern design meets the Northern Lights.'
   },
   {
     id: 'amalfi-heritage',
     name: 'Villa Heritage Amalfi',
     location: 'Positano, Italy',
     image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Quiet Luxury',
+    vibe: 'Luxury Boutique',
     price: 1200,
-    description: 'A sensory return to stone, lemons, and the deep blue of the Tyrrhenian.'
+    description: 'A sensory return to Positano cliffs, lemons, and the deep blue Mediterranean.'
   },
   {
     id: 'sahara-seclusion',
     name: 'Dune Sanctuary',
     location: 'Erg Chebbi, Morocco',
     image: 'https://images.unsplash.com/photo-1489493585363-d69421e0fb3a?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Intentional Travel',
+    vibe: 'Desert Retreat',
     price: 950,
-    description: 'Deep silence among the shifting sands of the high desert.'
+    description: 'Deep peace and star-gazing among the shifting sands of the high desert.'
   },
   {
     id: 'provence-legacy',
     name: 'Maison de la Lavande',
     location: 'Gordes, France',
     image: 'https://images.unsplash.com/photo-1505944270255-bd2b896e7517?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Slow Mode',
+    vibe: 'Country & Nature',
     price: 700,
-    description: 'A 17th-century estate reimagined for modern recovery.'
+    description: 'A beautifully restored 17th-century estate in the heart of Provence.'
   },
   {
     id: 'azores-frontier',
     name: 'Basalt House',
     location: 'Pico Island, Portugal',
     image: 'https://images.unsplash.com/photo-1534430480872-3498386e7a56?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Conscious Authenticity',
+    vibe: 'Historic & Coast',
     price: 600,
-    description: 'Volcanic architecture on the edge of the Atlantic frontier.'
+    description: 'Stunning volcanic architecture on the edge of the Atlantic coast.'
   },
   {
     id: 'cycladic-silence',
     name: 'The Monolith',
     location: 'Milos, Greece',
     image: 'https://images.unsplash.com/photo-1515444744559-7be63e1600de?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Barefoot Luxury',
+    vibe: 'Beachfront',
     price: 1100,
-    description: 'White stone, salt, and the absolute absence of noise.'
+    description: 'White Aegean stone, salt air, and total peace on the water.'
   },
   {
     id: 'dolomite-ascent',
     name: 'Refugio Cortina',
     location: 'Dolomites, Italy',
     image: 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Quiet Luxury',
+    vibe: 'Alpine',
     price: 900,
-    description: 'High-altitude design where the limestone meets the sky.'
+    description: 'Modern alpine lodging where the limestone peaks meet the sky.'
   },
   {
     id: 'ibiza-heritage',
     name: 'Finca Legado',
     location: 'Ibiza, Spain',
     image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200',
-    vibe: 'Slow Mode',
+    vibe: 'Country & Nature',
     price: 800,
-    description: 'The agricultural soul of the island, far from the neon.'
+    description: 'The historic, quiet soul of Ibiza, far from the busy clubs.'
   }
 ];
 

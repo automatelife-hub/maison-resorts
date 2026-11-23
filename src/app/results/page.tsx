@@ -1,6 +1,12 @@
 import { Suspense } from 'react';
 import { SearchResults } from '@/components/SearchResults';
 import { Skeleton } from '@/components/Skeleton';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Search Results | Maison Resorts',
+  description: 'Compare top-rated resorts and find the best rates for your stay. Secure booking with instant confirmation.',
+};
 
 function LoadingFallback() {
   return (

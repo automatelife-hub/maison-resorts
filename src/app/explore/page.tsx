@@ -1,142 +1,181 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { FEATURED_DESTINATIONS } from '@/data/destinations';
-import { SanctuaryPortal } from '@/components/SanctuaryPortal';
-import { HeritageGlobe } from '@/components/HeritageGlobe';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Compass, SlidersHorizontal } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ExplorePage() {
   const [activeVibe, setActiveVibe] = useState('All');
-  const vibes = ['All', 'Barefoot Luxury', 'Quiet Luxury', 'Intentional Travel', 'Slow Mode'];
+  const [activeTier, setActiveTier] = useState('All');
 
-  const filteredDestinations = activeVibe === 'All' 
-    ? FEATURED_DESTINATIONS 
-    : FEATURED_DESTINATIONS.filter(d => d.vibe === activeVibe);
+  const vibes = ['All', 'Beachfront', 'Luxury Boutique', 'Arctic & Winter', 'Country & Nature', 'Alpine'];
+  const tiers = [
+    { id: 'All', label: 'All Tiers' },
+    { id: 'Value', label: 'Value Stays (<$250)' },
+    { id: 'Premium', label: 'Premium Resorts ($250-$600)' },
+    { id: 'Elite', label: 'Luxury Estates (>$600)' }
+  ];
+
+  // Combined filter logic
+  const filteredDestinations = useMemo(() => {
+    return FEATURED_DESTINATIONS.filter(dest => {
+      const matchVibe = activeVibe === 'All' || dest.vibe === activeVibe;
+      const matchTier = activeTier === 'All' || dest.priceTier === activeTier;
+      return matchVibe && matchTier;
+    });
+  }, [activeVibe, activeTier]);
 
   return (
-    <div className="bg-[#050505] min-h-screen text-white">
-      {/* 3D Discovery Hero */}
-      <section className="relative pt-24 pb-12 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-16">
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent mb-6 font-bold">
-               Discovery Interface v3.0
-            </h3>
-            <h1 className="text-6xl md:text-8xl font-bold italic font-serif tracking-tighter leading-tight mb-8">
-               Explore the <br />
-               <span className="text-accent">Collection</span>
-            </h1>
-            <p className="text-lg text-gray-400 font-light leading-relaxed max-w-xl mb-12">
-               Our 2026 collection is a curated map of "Conscious Authenticity." 
-               Spin the heritage globe to locate niche sanctuaries across the European frontier.
-            </p>
-            
-            <div className="flex flex-wrap gap-4">
-               {vibes.map((v) => (
-                 <button 
-                   key={v}
-                   onClick={() => setActiveVibe(v)}
-                   className={`px-6 py-3 rounded-full border text-[10px] uppercase tracking-widest font-bold transition-all duration-500 ${
-                     activeVibe === v 
-                       ? 'bg-accent text-luxury border-accent shadow-lg shadow-accent/20' 
-                       : 'border-white/10 hover:border-accent hover:text-accent'
-                   }`}
-                 >
-                   {v}
-                 </button>
-               ))}
+    <div className="bg-white min-h-screen text-gray-800 font-sans antialiased">
+      {/* Light Hero Section */}
+      <section className="bg-gray-50 border-b border-gray-200 pt-32 pb-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <span className="text-[10px] uppercase tracking-widest text-gray-400 mb-3 font-semibold block">
+            Our Portfolio
+          </span>
+          <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-6">
+            Explore Destinations
+          </h1>
+          <p className="text-base text-gray-500 max-w-2xl leading-relaxed">
+            Explore our hand-picked collection of top-rated resorts and hotels. Use the filters below to find the perfect stay matching your preferred style and price range.
+          </p>
+        </div>
+      </section>
+
+      {/* Standard Filters */}
+      <div className="max-w-6xl mx-auto px-6 mt-12">
+        <div className="border-t border-b border-gray-100 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-2 text-gray-500">
+            <SlidersHorizontal size={14} />
+            <span className="text-xs uppercase tracking-wider font-semibold">
+              Filters
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-4 md:flex-row md:gap-8">
+            {/* Vibes Selection */}
+            <div className="flex flex-wrap gap-4 text-xs font-medium">
+              {vibes.map((v) => {
+                const isActive = activeVibe === v;
+                return (
+                  <button
+                    key={v}
+                    onClick={() => setActiveVibe(v)}
+                    className={`px-3 py-1.5 rounded-full transition-colors ${
+                      isActive ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {v}
+                  </button>
+                );
+              })}
             </div>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <HeritageGlobe />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Masonry Collection */}
-      <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
-        <div className="flex justify-between items-end mb-16 px-4">
-           <div>
-             <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-2 font-bold">{activeVibe} Collection</h3>
-             <h2 className="text-4xl font-bold text-white italic font-serif tracking-tighter italic">Niche <span className="text-accent">Sanctuaries</span></h2>
-           </div>
-           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold hidden md:block">
-             {filteredDestinations.length} Sanctuaries Found
-           </p>
-        </div>
-
-        <motion.div 
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 gap-12"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredDestinations.map((dest, i) => (
-              <motion.div
-                key={dest.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.5 }}
-              >
-                <SanctuaryPortal destination={dest} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </section>
-
-      {/* Philosophy Section */}
-      <section className="max-w-7xl mx-auto px-6 py-32 border-t border-white/5">
-        <div className="bg-white/5 backdrop-blur-3xl rounded-[4rem] p-12 md:p-24 relative overflow-hidden group border border-white/10 shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-             <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[150px] animate-pulse" />
+            {/* Price Tiers Selection */}
+            <div className="flex flex-wrap gap-4 text-xs font-medium">
+              {tiers.map((t) => {
+                const isActive = activeTier === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTier(t.id)}
+                    className={`px-3 py-1.5 rounded-full transition-colors ${
+                      isActive ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-             <div>
-                <h2 className="text-4xl md:text-6xl font-bold text-white mb-10 italic font-serif tracking-tighter">
-                   The Maison <br /><span className="text-accent">Philosophy</span>
-                </h2>
-                <p className="text-gray-400 text-lg leading-relaxed font-light mb-12">
-                   At Maison, we don't just book rooms; we facilitate voyages. Our 2026 collection is rooted in 
-                   "conscious authenticity"—moving away from generic opulence toward narrative-driven sanctuaries 
-                   that feel like private homes. Discover the soul of the Mediterranean, the silence of the Arctic, 
-                   and the heritage of the Alps.
-                </p>
-                <div className="grid grid-cols-3 gap-8">
-                  {[
-                    { val: '01', label: 'Heritage' },
-                    { val: '02', label: 'Seclusion' },
-                    { val: '03', label: 'Narrative' }
-                  ].map((item) => (
-                    <div key={item.val} className="group/item">
-                       <div className="text-accent text-4xl font-bold mb-2 italic font-serif group-hover/item:translate-y-[-4px] transition-transform duration-500">{item.val}</div>
-                       <div className="text-[8px] uppercase tracking-[0.4em] text-gray-500 font-bold">{item.label}</div>
-                    </div>
-                  ))}
+        </div>
+      </div>
+
+      {/* Main Grid Content */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="flex justify-between items-end mb-10">
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1 block">
+              Showing {activeVibe !== 'All' ? activeVibe : 'All'} • {activeTier !== 'All' ? activeTier : 'All Tiers'}
+            </span>
+            <h2 className="text-xl font-serif text-gray-900 font-normal">
+              Curated Properties
+            </h2>
+          </div>
+          <p className="text-xs text-gray-500 font-medium">
+            {filteredDestinations.length} Properties Found
+          </p>
+        </div>
+
+        {filteredDestinations.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredDestinations.map((dest) => (
+              <div key={dest.id} className="border border-gray-100 rounded-lg overflow-hidden hover:shadow-sm transition-shadow flex flex-col bg-white">
+                <div className="aspect-[4/3] bg-gray-50 overflow-hidden relative">
+                  <img
+                    src={dest.image}
+                    alt={dest.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute top-4 left-4 bg-white/95 text-gray-800 text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full font-bold border border-gray-200">
+                    {dest.vibe}
+                  </span>
                 </div>
-             </div>
-             
-             <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl grayscale hover:grayscale-0 transition-all duration-1000 border border-white/10">
-                <img 
-                  src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000" 
-                  alt="Philosophy" 
-                  className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-[2000ms]"
-                />
-             </div>
+                
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {dest.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-4 leading-relaxed line-clamp-2">
+                      {dest.description}
+                    </p>
+                    
+                    <div className="mb-6 flex flex-wrap gap-2">
+                      {dest.highlights.map((h, idx) => (
+                        <span key={idx} className="bg-gray-50 text-gray-600 text-[10px] px-2 py-0.5 rounded border border-gray-100">
+                          {h}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] text-gray-400 block uppercase tracking-wider">Starting from</span>
+                      <span className="text-base font-semibold text-gray-900">${dest.minPrice} / night</span>
+                    </div>
+                    
+                    <Link
+                      href={`/results?destination=${encodeURIComponent(dest.name)}`}
+                      className="bg-gray-900 text-white text-xs uppercase tracking-wider font-semibold px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                    >
+                      Book Now
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-20 border border-gray-100 bg-gray-50 rounded-lg max-w-md mx-auto p-8">
+            <p className="text-gray-900 text-lg font-serif mb-2">No Properties Found</p>
+            <p className="text-gray-500 text-xs leading-relaxed mb-6">
+              Adjust your filters to see other properties in different styles or tiers.
+            </p>
+            <button
+              onClick={() => {
+                setActiveVibe('All');
+                setActiveTier('All');
+              }}
+              className="bg-gray-900 text-white px-5 py-2.5 rounded text-xs font-semibold uppercase tracking-wider hover:bg-gray-800 transition-all"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

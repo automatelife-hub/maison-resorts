@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --fg: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #374151;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -13,6 +22,8 @@ html {
 }
 
 body {
+  background-color: #ffffff;
+  color: #1f2937;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -22,10 +33,10 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-luxury text-white rounded-lg hover:bg-accent hover:text-luxury transition-colors;
+    @apply px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow;
+    @apply bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow;
   }
 }

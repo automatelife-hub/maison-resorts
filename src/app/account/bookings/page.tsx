@@ -49,11 +49,11 @@ export default function BookingsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <Skeleton className="h-12 w-1/3 mb-12" />
-        <div className="space-y-6">
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-1/3 rounded bg-gray-100" />
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-[2rem]" />
+            <Skeleton key={i} className="h-32 w-full rounded bg-gray-100" />
           ))}
         </div>
       </div>
@@ -62,10 +62,10 @@ export default function BookingsPage() {
 
   if (!user) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-24">
+      <div className="py-16">
         <EmptyState 
           title="Members Only" 
-          description="Please sign in to view your Maison voyage history." 
+          description="Please sign in to view your booking history." 
           icon="🔒" 
         />
       </div>
@@ -73,48 +73,48 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
-      <div className="mb-12">
-        <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-2">Member Dashboard</h3>
-        <h1 className="text-5xl font-bold text-luxury italic font-serif">Your <span className="text-accent">Voyages</span></h1>
+    <div className="space-y-8 text-gray-800">
+      <div>
+        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1 block">Account Dashboard</span>
+        <h1 className="text-3xl font-serif text-gray-900 font-normal">Your Bookings</h1>
       </div>
 
       {bookings.length > 0 ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {bookings.map((booking) => (
-            <div key={booking.id} className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 hover:shadow-xl transition-all flex flex-col md:flex-row gap-8">
-              <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden rounded-2xl bg-gray-50 flex items-center justify-center">
+            <div key={booking.id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col md:flex-row gap-6">
+              <div className="relative w-full md:w-48 h-36 md:h-auto overflow-hidden rounded bg-gray-50 flex items-center justify-center shrink-0">
                 {booking.type === 'flight' ? (
-                  <div className="text-4xl text-accent opacity-20">✈️</div>
+                  <div className="text-3xl opacity-20">✈️</div>
                 ) : (
                   <img 
                     src={booking.hotelPhoto || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800'} 
                     className="w-full h-full object-cover"
-                    alt={booking.hotelName || 'Sanctuary'}
+                    alt={booking.hotelName || 'Property'}
                   />
                 )}
-                <div className="absolute top-4 left-4">
+                <div className="absolute top-3 left-3">
                   <Badge variant={booking.status === 'confirmed' ? 'success' : 'warning'}>
                     {(booking.status || 'confirmed').toUpperCase()}
                   </Badge>
                 </div>
                 {booking.type === 'flight' && (
-                  <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-[8px] font-bold tracking-widest text-luxury">
-                    VOYAGE
+                  <div className="absolute bottom-3 right-3 bg-white/90 border border-gray-200 px-2 py-0.5 rounded text-[8px] font-bold tracking-wider text-gray-700">
+                    FLIGHT
                   </div>
                 )}
               </div>
 
-              <div className="flex-1 space-y-6">
-                <div className="flex justify-between items-start">
+              <div className="flex-1 space-y-4">
+                <div className="flex justify-between items-start gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-luxury mb-1">
+                    <h2 className="text-lg font-semibold text-gray-900">
                       {booking.type === 'flight' 
                         ? `${booking.origin} to ${booking.destination}`
-                        : (booking.hotelName || 'Maison Sanctuary')
+                        : (booking.hotelName || 'Deluxe Room')
                       }
                     </h2>
-                    <p className="text-gray-500 text-sm uppercase tracking-widest">
+                    <p className="text-gray-500 text-xs mt-0.5">
                       {booking.type === 'flight'
                         ? booking.airline
                         : `${booking.city || 'Undisclosed'}, ${booking.countryCode || 'Region'}`
@@ -122,56 +122,55 @@ export default function BookingsPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Total Paid</p>
-                    <PriceDisplay price={booking.total_amount || booking.totalPrice || 0} currency={booking.currency || 'USD'} className="text-xl font-bold text-luxury" />
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5">Total Paid</p>
+                    <PriceDisplay price={booking.total_amount || booking.totalPrice || 0} currency={booking.currency || 'USD'} className="text-base font-semibold text-gray-950" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-6 border-y border-gray-50">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-y border-gray-100">
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5">
                       {booking.type === 'flight' ? 'Departure' : 'Check-in'}
                     </p>
-                    <p className="font-bold text-luxury">
+                    <p className="text-xs font-semibold text-gray-800">
                       {booking.type === 'flight' ? booking.departureTime : booking.check_in_date || booking.checkin || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5">
                       {booking.type === 'flight' ? 'Arrival' : 'Check-out'}
                     </p>
-                    <p className="font-bold text-luxury">
+                    <p className="text-xs font-semibold text-gray-800">
                       {booking.type === 'flight' ? booking.arrivalTime : booking.check_out_date || booking.checkout || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5">
                       {booking.type === 'flight' ? 'Details' : 'Room'}
                     </p>
-                    <div className="text-sm text-gray-600 truncate">
+                    <div className="text-xs text-gray-650 truncate max-w-[150px]">
                       {booking.type === 'flight' ? (
                         <div className="flex flex-col">
                           <span>{booking.cabinClass}</span>
-                          {booking.duration && <span className="text-[10px] text-gray-400">{booking.duration} • {booking.stops === 0 ? 'Non-stop' : `${booking.stops} stops`}</span>}
-                          {booking.aircraft && <span className="text-[10px] text-gray-400 italic">{booking.aircraft}</span>}
+                          {booking.duration && <span className="text-[9px] text-gray-405">{booking.duration}</span>}
                         </div>
                       ) : (
-                        booking.roomType || 'Maison Suite'
+                        booking.roomType || 'Maison Room'
                       )}
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Reference</p>
-                    <p className="text-sm font-mono text-gray-600">{booking.bookingId || booking.id}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5">Reference</p>
+                    <p className="text-xs font-mono text-gray-500">{booking.bookingId || booking.id}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <button className="text-[10px] uppercase tracking-widest font-bold text-luxury border border-luxury/10 px-6 py-2 rounded-xl hover:bg-gray-50 transition-all">
+                <div className="flex gap-3 pt-2">
+                  <button className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors">
                     View Receipt
                   </button>
-                  <button className="text-[10px] uppercase tracking-widest font-bold text-accent px-6 py-2 rounded-xl hover:bg-accent/5 transition-all">
-                    Manage Voyage →
+                  <button className="bg-gray-950 hover:bg-gray-850 text-white px-4 py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors">
+                    Manage Booking
                   </button>
                 </div>
               </div>
@@ -179,13 +178,13 @@ export default function BookingsPage() {
           ))}
         </div>
       ) : (
-        <div className="py-24 bg-gray-50 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
-          <p className="text-gray-400 mb-8 italic">Your voyage history is currently a blank canvas.</p>
+        <div className="py-16 bg-gray-50 rounded border-2 border-dashed border-gray-200 text-center p-8 max-w-xl mx-auto">
+          <p className="text-gray-500 mb-6">Your booking history is currently empty.</p>
           <a 
             href="/explore" 
-            className="bg-luxury text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-black transition-all shadow-lg shadow-luxury/10"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors inline-block"
           >
-            Start Your Journey
+            Find a Property
           </a>
         </div>
       )}

@@ -3,7 +3,7 @@ import { COLLECTION_2026 } from '@/data/collection';
 
 export async function POST(request: Request) {
   try {
-    const { destination, checkInDate, checkOutDate, guests, occupancies, placeId } = await request.json();
+    const { destination, checkInDate, checkOutDate, guests, occupancies, placeId, currency } = await request.json();
 
     console.log(`[SEARCH] Initiating search for: ${destination || placeId}`);
 
@@ -11,14 +11,29 @@ export async function POST(request: Request) {
     const searchOccupancies = occupancies || [{ adults: guests || 1 }];
 
     try {
-      const searchResults = await searchHotels(destination || 'Europe', checkInDate || '2026-06-01', checkOutDate || '2026-06-05', searchOccupancies, placeId);
-
-      if (searchResults.data.length === 0) {
-        throw new Error('No hotels returned from LiteAPI');
+      // Fix date offset if checkInDate is today or past
+      let adjustedCheckIn = checkInDate || '2026-06-01';
+      let adjustedCheckOut = checkOutDate || '2026-06-05';
+      const today = new Date().toISOString().split('T')[0];
+      if (adjustedCheckIn <= today) {
+         const tmr = new Date(Date.now() + 86400000);
+         adjustedCheckIn = tmr.toISOString().split('T')[0];
+         const dayAfter = new Date(Date.now() + 86400000 * 2);
+         adjustedCheckOut = dayAfter.toISOString().split('T')[0];
       }
 
-      console.log(`[SEARCH] Success. Found ${searchResults.data.length} hotels.`);
-      return Response.json({ hotels: searchResults.data });
+      // Search for hotels using unified v3.0 search
+      const searchResults = await searchHotels(
+        destination || 'Europe', 
+        adjustedCheckIn, 
+        adjustedCheckOut, 
+        searchOccupancies, 
+        placeId, 
+        currency || 'USD'
+      );
+      
+      console.log(`[SEARCH] Success. Found ${searchResults.data.length} total hotels (including curated).`);
+      return Response.json({ hotels: searchResults.data || [] });
     } catch (apiError) {
       console.error('[SEARCH] LiteAPI Fetch Failed, falling back to curated collection only:', apiError);
       

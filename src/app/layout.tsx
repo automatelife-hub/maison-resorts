@@ -7,13 +7,13 @@ import Footer from '@/components/Footer';
 export const metadata: Metadata = {
   title: {
     template: '%s | Maison Resorts',
-    default: 'Maison Resorts | Conscious Luxury & Heritage Sanctuaries',
+    default: 'Maison Resorts | Simple & Reliable Resort Bookings',
   },
-  description: 'Experience the art of the voyage with Maison Resorts. Curating the world’s most secluded European niche spots and heritage sanctuaries for the discerning traveler.',
-  keywords: ['luxury travel 2026', 'heritage hotels Europe', 'conscious authenticity', 'niche vacation spots', 'private sanctuaries', 'Maison resorts'],
+  description: 'Book your next resort stay and flight with Maison Resorts. Browse hand-picked properties, enjoy instant confirmation, and experience hassle-free booking.',
+  keywords: ['resort bookings', 'luxury hotels', 'book flights and hotels', 'vacation packages', 'hotel deals', 'Maison resorts'],
   openGraph: {
-    title: 'Maison Resorts | Conscious Luxury',
-    description: 'Curating the world’s most secluded heritage sanctuaries.',
+    title: 'Maison Resorts | Hotel & Flight Bookings',
+    description: 'Find and book hand-picked resorts with direct flight connections and instant confirmation.',
     url: 'https://maisonresorts.com',
     siteName: 'Maison Resorts',
     locale: 'en_US',
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Maison Resorts | Conscious Luxury',
-    description: 'Curating the world’s most secluded heritage sanctuaries.',
+    title: 'Maison Resorts | Hotel & Flight Bookings',
+    description: 'Find and book hand-picked resorts with direct flight connections and instant confirmation.',
   },
 };
 

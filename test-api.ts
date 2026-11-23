@@ -1,4 +1,4 @@
-import { searchHotels, getHotelDetails, getHotelRates } from './src/lib/api';
+import { searchHotels, getHotelDetails, getHotelRates } from './src/lib/api.ts';
 
 async function test() {
   console.log('--- Testing searchHotels ---');

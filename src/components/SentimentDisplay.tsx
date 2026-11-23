@@ -26,7 +26,6 @@ export function SentimentDisplay({ categories: initialCategories, hotelId }: Sen
         const response = await fetch(`/api/reviews?hotelId=${hotelId}&getSentiment=true`);
         if (response.ok) {
           const data = await response.json();
-          // Assuming the API returns a 'sentiment' object or 'categories'
           setCategories(data.sentiment?.categories || data.categories || {});
         }
       } catch (err) {
@@ -55,24 +54,28 @@ export function SentimentDisplay({ categories: initialCategories, hotelId }: Sen
   if (!categories) return null;
 
   const categoryMap: SentimentCategory[] = [
-    { label: 'Silence', score: categories.cleanliness || 0.92 }, // Renaming for Maison Vibe
-    { label: 'Heritage', score: categories.service || 0.88 },
-    { label: 'Seclusion', score: categories.location || 0.95 },
-    { label: 'Narrative', score: categories.room_quality || 0.90 },
-    { label: 'Consciousness', score: categories.value || 0.85 },
+    { label: 'Cleanliness', score: categories.cleanliness || 0.92 },
+    { label: 'Service', score: categories.service || 0.88 },
+    { label: 'Location', score: categories.location || 0.95 },
+    { label: 'Room Quality', score: categories.room_quality || 0.90 },
+    { label: 'Value', score: categories.value || 0.85 },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-8 bg-white p-6 border border-gray-200 rounded-lg">
       {categoryMap.map((cat) => (
         <div key={cat.label} className="group">
-          <div className="flex justify-between items-end mb-3">
-            <span className="text-[10px] uppercase tracking-widest text-gray-400 group-hover:text-luxury transition-colors">{cat.label}</span>
-            <span className="text-[10px] font-bold text-accent">{(cat.score * 100).toFixed(0)}%</span>
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold group-hover:text-gray-900 transition-colors">
+              {cat.label}
+            </span>
+            <span className="text-xs font-semibold text-gray-800">
+              {(cat.score * 100).toFixed(0)}%
+            </span>
           </div>
-          <div className="w-full bg-gray-50 rounded-full h-[3px] overflow-hidden">
+          <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
             <div
-              className="bg-accent h-full rounded-full transition-all duration-1000 group-hover:bg-luxury"
+              className="bg-gray-800 h-full rounded-full transition-all duration-1000 group-hover:bg-gray-900"
               style={{ width: `${cat.score * 100}%` }}
             />
           </div>
