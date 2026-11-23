@@ -3,7 +3,7 @@
 This document reports the findings of the complete API audit on **LiteAPI Travel v3.0** endpoints, cross-referencing capabilities offered by the API, SDK exports, and our application coverage.
 
 ## 1. Executive Summary & Diagnostic Results
-A comprehensive diagnostic sweep was run on the live production API using our updated production key `REDACTED_LITEAPI_KEY`. 
+A comprehensive diagnostic sweep was run on the live production API using the production key (stored in `.env` as `LITEAPI_KEY`). 
 *   **Result:** **100% success rate (27/27 endpoints passed)**.
 *   **Flights API Access Constraint:** The production API key has restricted access for Flights APIs on the production servers (returns `HTTP 403: Flights API for this account is limited to sandbox API keys only`).
 *   **Vouchers & Loyalty:** The voucher endpoint and loyalty programs respond successfully with standard JSON structure, allowing live voucher retrieval (`/vouchers`) and loyalty info queries.
