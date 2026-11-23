@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { usePreferences } from '@/context/PreferencesContext';
 import { EmptyState } from '@/components/EmptyState';
@@ -14,19 +13,19 @@ export default function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="space-y-12">
-        <Skeleton className="h-12 w-1/3 rounded-2xl" />
-        <Skeleton className="h-64 w-full rounded-[3rem]" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-1/3 rounded bg-gray-100" />
+        <Skeleton className="h-48 w-full rounded bg-gray-100" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="py-24">
+      <div className="py-16">
         <EmptyState 
           title="Members Only" 
-          description="Please sign in to manage your Maison profile and preferences." 
+          description="Please sign in to manage your profile and preferences." 
           icon="🔒" 
         />
       </div>
@@ -34,51 +33,48 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-16 pb-24">
+    <div className="max-w-3xl space-y-8 text-gray-800">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent mb-4 font-bold">Member Profile</h3>
-        <h1 className="text-5xl font-bold text-white italic font-serif tracking-tighter">
-          Account <span className="text-accent">Settings</span>
+      <div>
+        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1 block">Member Settings</span>
+        <h1 className="text-3xl font-serif text-gray-900 font-normal">
+          Account Profile
         </h1>
-      </motion.div>
+      </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Personal Info */}
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 relative overflow-hidden group">
-          <div className="flex flex-col md:flex-row items-center gap-10 mb-12 pb-12 border-b border-white/5">
-            <div className="w-32 h-32 rounded-[2.5rem] bg-accent/20 text-accent flex items-center justify-center text-4xl font-serif italic shadow-2xl border border-accent/30 relative">
+        <div className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+          <div className="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-gray-150">
+            <div className="w-24 h-24 rounded-full bg-gray-100 text-gray-800 flex items-center justify-center text-3xl font-serif italic shadow-inner border border-gray-200 relative shrink-0">
               {user.photoURL ? (
-                <img src={user.photoURL} alt={user.displayName || ''} className="w-full h-full object-cover rounded-[2.5rem]" />
+                <img src={user.photoURL} alt={user.displayName || ''} className="w-full h-full object-cover rounded-full" />
               ) : (
                 user.email?.[0].toUpperCase()
               )}
-              <div className="absolute -bottom-2 -right-2 bg-luxury border border-accent/30 p-2 rounded-2xl shadow-xl">
-                 <Shield size={16} className="text-accent" />
+              <div className="absolute bottom-0 right-0 bg-white border border-gray-200 p-1.5 rounded-full shadow-sm">
+                 <Shield size={12} className="text-green-600" />
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h2 className="text-3xl font-bold text-white tracking-tight">{user.displayName || 'Maison Voyager'}</h2>
-              <p className="text-gray-500 uppercase tracking-[0.2em] text-[10px] mt-2 italic font-bold">Heritage Member since 2026</p>
-              <button className="mt-6 text-[8px] uppercase tracking-widest text-accent font-bold border-b border-accent/20 pb-1 hover:border-accent transition-all">
-                Update Visual Identity
+              <h2 className="text-2xl font-semibold text-gray-900">{user.displayName || 'Voyager'}</h2>
+              <p className="text-gray-400 text-xs mt-1">Verified Member</p>
+              <button className="mt-4 text-xs font-semibold text-gray-900 underline hover:text-gray-700 transition-colors">
+                Change Profile Photo
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-[0.3em] text-gray-500 px-1 font-bold">Email Access</label>
-              <div className="px-6 py-4 rounded-2xl bg-white/5 text-white font-medium border border-white/5 shadow-inner">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Email Address</label>
+              <div className="px-4 py-2.5 rounded bg-gray-50 text-gray-800 text-xs font-semibold border border-gray-200">
                 {user.email}
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-[0.3em] text-gray-500 px-1 font-bold">Account Key</label>
-              <div className="px-6 py-4 rounded-2xl bg-white/5 text-gray-500 font-mono text-xs border border-white/5 truncate">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">User Identifier ID</label>
+              <div className="px-4 py-2.5 rounded bg-gray-50 text-gray-500 font-mono text-xs border border-gray-200 truncate">
                 {user.uid}
               </div>
             </div>
@@ -86,43 +82,43 @@ export default function ProfilePage() {
         </div>
 
         {/* Travel Preferences */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10">
-              <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold flex items-center gap-3">
-                 <CreditCard size={14} /> Currency
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                 <CreditCard size={15} className="text-gray-500" /> Preferred Currency
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <CurrencySelector />
-                <p className="text-[10px] text-gray-500 italic leading-relaxed">
-                  Our algorithm will automatically rebalance all heritage rates to <span className="text-white font-bold">{currency}</span>.
+                <p className="text-xs text-gray-450 leading-relaxed">
+                  Prices across properties will display in <span className="font-semibold text-gray-850">{currency}</span>.
                 </p>
               </div>
            </div>
 
-           <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10">
-              <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-8 font-bold flex items-center gap-3">
-                 <Bell size={14} /> Intelligence
+           <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                 <Bell size={15} className="text-gray-500" /> Notifications
               </h3>
-              <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/5 border border-white/5">
-                <input type="checkbox" checked readOnly className="w-4 h-4 rounded border-white/10 bg-white/5 text-accent focus:ring-accent" />
-                <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Discovery Updates</span>
+              <div className="flex items-center gap-3 px-4 py-3 rounded bg-gray-50 border border-gray-200">
+                <input type="checkbox" checked readOnly className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer" />
+                <span className="text-xs text-gray-600 font-semibold">Email Discovery Updates</span>
               </div>
            </div>
         </div>
 
-        {/* Security Alert */}
-        <div className="bg-gradient-to-r from-accent/10 to-transparent rounded-[2.5rem] p-8 border border-accent/20 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-6">
-            <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center text-accent">
-               <Shield size={20} />
+        {/* Security Box */}
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 shrink-0">
+               <Shield size={18} />
             </div>
             <div className="text-center md:text-left">
-              <h3 className="text-white font-bold italic font-serif">Security Protocol</h3>
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Manage encryption and third-party access.</p>
+              <h3 className="text-sm font-semibold text-gray-900">Security Credentials</h3>
+              <p className="text-xs text-gray-500">Rotate security keys and manage active sessions.</p>
             </div>
           </div>
-          <button className="text-[10px] uppercase tracking-widest font-bold text-luxury bg-accent px-8 py-3 rounded-xl hover:bg-white transition-all shadow-xl shadow-accent/10">
-            Rotate Keys
+          <button className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-all">
+            Update Security
           </button>
         </div>
       </div>

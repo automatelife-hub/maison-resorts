@@ -40,11 +40,11 @@ export function CurrencySelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-accent hover:text-white transition-colors py-2"
+        className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors py-2"
       >
-        <span className="opacity-50 text-[8px]">Currency:</span> {currency}
+        <span className="text-gray-400 font-normal">Currency:</span> {currency}
         <svg 
-          className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -52,8 +52,8 @@ export function CurrencySelector() {
       </button>
       
       {isOpen && (
-        <div className="absolute top-full right-0 mt-4 bg-luxury border border-white/10 rounded-2xl shadow-2xl z-50 min-w-[200px] overflow-hidden backdrop-blur-xl bg-opacity-95">
-          <div className="p-2 max-h-80 overflow-y-auto custom-scrollbar">
+        <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[180px] overflow-hidden">
+          <div className="p-1 max-h-60 overflow-y-auto">
             {currencies.map((curr) => (
               <button
                 key={curr.code}
@@ -61,19 +61,19 @@ export function CurrencySelector() {
                   setCurrency(curr.code);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-5 py-3 rounded-xl transition-all flex justify-between items-center group ${
+                className={`w-full text-left px-4 py-2 rounded text-xs transition-all flex justify-between items-center ${
                   currency === curr.code 
-                    ? 'bg-accent text-luxury font-bold' 
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-gray-100 text-gray-900 font-semibold' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 <div className="flex flex-col">
-                  <span className="text-xs tracking-widest">{curr.code}</span>
-                  <span className={`text-[8px] uppercase tracking-tighter opacity-60 ${currency === curr.code ? 'text-luxury' : 'text-gray-500'}`}>
+                  <span>{curr.code}</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">
                     {curr.name}
                   </span>
                 </div>
-                {currency === curr.code && <span className="text-xs">✓</span>}
+                {currency === curr.code && <span className="text-gray-600">✓</span>}
               </button>
             ))}
           </div>

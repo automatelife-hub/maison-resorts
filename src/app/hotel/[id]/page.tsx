@@ -66,12 +66,12 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
       try {
         setLoading(true);
         const response = await fetch(`/api/hotels/${hotelId}`);
-        if (!response.ok) throw new Error('Failed to fetch hotel sanctuary');
+        if (!response.ok) throw new Error('Failed to fetch hotel property');
         const data = await response.json();
         setHotel(data);
         await fetchRates(occupancies);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load sanctuary');
+        setError(err instanceof Error ? err.message : 'Failed to load property');
       } finally {
         setLoading(false);
       }
@@ -96,15 +96,15 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <Skeleton className="h-[60vh] w-full mb-12 rounded-[3rem]" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div className="md:col-span-2 space-y-6">
-            <Skeleton className="h-12 w-1/2 rounded-2xl" />
-            <Skeleton className="h-32 w-full rounded-2xl" />
-            <Skeleton className="h-64 w-full rounded-2xl" />
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <Skeleton className="h-[45vh] w-full mb-8 rounded-lg" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-10 w-1/2 rounded" />
+            <Skeleton className="h-24 w-full rounded" />
+            <Skeleton className="h-48 w-full rounded" />
           </div>
-          <Skeleton className="h-[500px] w-full rounded-[3rem]" />
+          <Skeleton className="h-[350px] w-full rounded" />
         </div>
       </div>
     );
@@ -112,83 +112,81 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-24">
-        <EmptyState title="Voyage Interrupted" description={error} icon="⚠️" />
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        <EmptyState title="Failed to Load Page" description={error} icon="⚠️" />
       </div>
     );
   }
 
   if (!hotel) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-24">
-        <EmptyState title="Sanctuary Not Found" description="The requested heritage spot could not be located in our 2026 collection." icon="🔍" />
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        <EmptyState title="Hotel Not Found" description="The requested hotel could not be found. Please search again." icon="🔍" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
+    <div className="max-w-7xl mx-auto px-6 py-12 text-gray-800 bg-white min-h-screen">
       {/* Hero Image Section */}
-      <div className="relative mb-16 rounded-[3rem] overflow-hidden h-[60vh] shadow-2xl group">
+      <div className="relative mb-8 rounded-lg overflow-hidden h-[45vh] bg-gray-100">
         {hotel.photo ? (
-          <img src={hotel.photo} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+          <img src={hotel.photo} alt={hotel.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300 text-5xl font-serif italic">MAISON</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl font-serif">MAISON</div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-luxury/80 via-transparent to-transparent" />
-        <div className="absolute bottom-12 left-12 text-white">
-          <div className="flex items-center gap-4 mb-4">
-             <div className="bg-accent/20 backdrop-blur-md px-3 py-1 rounded-full border border-accent/30 shadow-sm">
-                <StarRating rating={hotel.star_rating} size="xs" color="#d4af37" />
-             </div>
-             <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-accent">Heritage Sanctuaries</span>
+      </div>
+
+      {/* Hotel Title & Details */}
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-12 pb-8 border-b border-gray-200">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <StarRating rating={hotel.star_rating} size="sm" />
+            <span className="text-xs text-gray-500">• {hotel.city}</span>
           </div>
-          <div className="flex justify-between items-start gap-8">
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 italic font-serif tracking-tighter">{hotel.name}</h1>
-            <div className="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/20">
-              <FavoriteButton 
-                hotelId={hotel.id} 
-                hotelName={hotel.name} 
-                hotelPhoto={hotel.photo} 
-              />
-            </div>
-          </div>
-          <p className="text-xl text-gray-200 font-light tracking-wide">{hotel.city} — European Niche Collection 2026</p>
+          <h1 className="text-3xl md:text-4xl font-serif text-gray-900 font-normal">{hotel.name}</h1>
+          <p className="text-sm text-gray-500 mt-1">{hotel.address}</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <FavoriteButton 
+            hotelId={hotel.id} 
+            hotelName={hotel.name} 
+            hotelPhoto={hotel.photo} 
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-        <div className="lg:col-span-2 space-y-16">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2 space-y-12">
           {/* Sentiment / AI Review Summary */}
           <section>
-             <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-6 font-bold">Conscious Sentiment</h3>
+             <h3 className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-bold">Guest Sentiment Analysis</h3>
              <SentimentDisplay hotelId={hotelId} />
           </section>
 
           {/* About Section */}
           <section>
-            <h2 className="text-3xl font-bold text-luxury mb-6 italic font-serif">The <span className="text-accent">Experience</span></h2>
-            <p className="text-gray-600 text-lg leading-relaxed font-light mb-8">
+            <h2 className="text-2xl font-serif text-gray-900 mb-4">About the Property</h2>
+            <p className="text-gray-600 leading-relaxed mb-8">
               {hotel.description}
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div>
-                  <h4 className="text-[10px] uppercase tracking-widest text-gray-400 mb-6 font-bold">In-Sanctuary Amenities</h4>
-                  <div className="grid grid-cols-1 gap-4">
+                  <h4 className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-bold">Amenities</h4>
+                  <div className="grid grid-cols-1 gap-2">
                     {hotel.amenities?.slice(0, 10).map((amenity, idx) => (
-                      <div key={idx} className="flex items-center gap-4 text-sm text-gray-600 group">
-                        <span className="text-accent font-bold">✦</span>
-                        <span className="group-hover:text-luxury transition-colors">{amenity}</span>
+                      <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        <span className="text-gray-400">•</span>
+                        <span>{amenity}</span>
                       </div>
                     ))}
                   </div>
                </div>
-               <div className="bg-gray-50 rounded-[2.5rem] p-8 border border-gray-100">
-                  <h4 className="text-[10px] uppercase tracking-widest text-gray-400 mb-6 font-bold">Location Heritage</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-6 italic">
-                    "{hotel.name} is nestled in the heart of {hotel.city}, offering a narrative-driven stay that prioritizes silence, heritage reimagined, and cultural immersion."
+               <div className="bg-gray-50 rounded-lg p-6 border border-gray-100">
+                  <h4 className="text-xs uppercase tracking-wider text-gray-400 mb-3 font-bold">Property Highlight</h4>
+                  <p className="text-sm text-gray-500 leading-relaxed italic">
+                    "{hotel.name} is situated in {hotel.city}, presenting a unique and memorable stay that prioritizes guest comfort, excellent amenities, and convenient access to local attractions."
                   </p>
-                  <p className="text-[10px] font-bold text-luxury uppercase tracking-widest">{hotel.address}</p>
                </div>
             </div>
           </section>
@@ -196,11 +194,11 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
 
         {/* Booking Sidebar / Rates */}
         <aside className="relative">
-          <div className="sticky top-24 bg-luxury text-white p-10 rounded-[3rem] shadow-2xl border border-white/5">
-            <h2 className="text-2xl font-bold mb-8 italic font-serif">Reserved <span className="text-accent">Living</span></h2>
+          <div className="sticky top-24 bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Select a Room</h2>
             
-            <div className="mb-8 pb-8 border-b border-white/10">
-               <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 mb-4 font-bold">Voyagers</h3>
+            <div className="mb-6 pb-6 border-b border-gray-200">
+               <h3 className="text-xs uppercase tracking-wider text-gray-400 mb-2 font-bold">Guests</h3>
                <SanctuaryPlanner 
                  occupancies={occupancies} 
                  onChange={handleOccupancyChange} 
@@ -208,26 +206,26 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             {ratesLoading ? (
-              <div className="space-y-6">
-                <Skeleton className="h-24 w-full bg-white/5 rounded-2xl" />
-                <Skeleton className="h-24 w-full bg-white/5 rounded-2xl" />
+              <div className="space-y-4">
+                <Skeleton className="h-20 w-full rounded" />
+                <Skeleton className="h-20 w-full rounded" />
               </div>
             ) : rates.length > 0 ? (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {rates.map((room: any) => (
-                  <div key={room.room_id} className="border-b border-white/10 pb-8 last:border-0 last:pb-0 group">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-accent mb-2 font-bold group-hover:translate-x-1 transition-transform">{room.room_name}</p>
+                  <div key={room.room_id} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                    <p className="text-sm font-semibold text-gray-900 mb-1">{room.room_name}</p>
                     {room.rates?.map((rate: any) => (
-                      <div key={rate.rate_id} className="flex flex-col gap-6 mt-4">
+                      <div key={rate.rate_id} className="flex flex-col gap-4 mt-3">
                         <div className="flex justify-between items-baseline">
-                          <p className="text-[10px] text-gray-400 uppercase tracking-widest">{rate.board_type}</p>
-                          <PriceDisplay price={rate.net_rate} currency={rate.currency} className="text-3xl font-bold text-white tracking-tighter" />
+                          <p className="text-xs text-gray-500 uppercase">{rate.board_type}</p>
+                          <PriceDisplay price={rate.net_rate} currency={rate.currency} className="text-2xl font-bold text-gray-900" />
                         </div>
                         <button 
                           onClick={() => handleBookRate(rate.rate_id)}
-                          className="w-full bg-accent text-luxury py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-accent/10"
+                          className="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded text-xs uppercase tracking-wider font-semibold transition-colors"
                         >
-                          Confirm Voyage
+                          Book Room
                         </button>
                       </div>
                     ))}
@@ -235,21 +233,11 @@ export default function HotelDetailPage({ params }: { params: Promise<{ id: stri
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-12 h-12 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                   <span className="text-accent">!</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-8 font-light leading-relaxed">No sanctuaries are currently available for these dates in our 2026 collection.</p>
-                <button className="text-accent text-[10px] uppercase tracking-[0.3em] font-bold border-b border-accent/20 pb-1 hover:border-accent transition-all">Change Voyage Dates</button>
+              <div className="text-center py-8">
+                <p className="text-sm text-gray-500 mb-4">No rooms are available for these dates.</p>
+                <button className="text-gray-900 hover:text-gray-700 text-xs font-semibold underline">Change Dates</button>
               </div>
             )}
-
-            <div className="mt-12 pt-12 border-t border-white/5">
-               <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  <span>Verified 2026 Rate Guarantee</span>
-               </div>
-            </div>
           </div>
         </aside>
       </div>

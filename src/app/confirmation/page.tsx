@@ -13,9 +13,9 @@ export default function ConfirmationPage() {
         <div className="w-24 h-24 bg-accent/10 text-accent rounded-full flex items-center justify-center text-5xl mx-auto mb-8 animate-bounce">
           ✓
         </div>
-        <h1 className="text-5xl font-bold text-luxury mb-4 italic font-serif">Bon <span className="text-accent">Voyage</span></h1>
+        <h1 className="text-4xl font-bold text-luxury mb-4 font-serif">Booking Confirmed!</h1>
         <p className="text-xl text-gray-600 max-w-lg mx-auto">
-          Your reservation has been confirmed. Your sanctuary awaits.
+          Your reservation has been confirmed. A confirmation email with details has been sent to your address.
         </p>
       </div>
 

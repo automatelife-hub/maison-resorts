@@ -3,7 +3,6 @@
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
 import { Skeleton } from '@/components/Skeleton';
-import { DestinationCard } from '@/components/DestinationCard';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -66,11 +65,11 @@ export default function FavoritesPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <Skeleton className="h-12 w-1/3 mb-12" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-1/3 rounded bg-gray-100" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-80 w-full rounded-3xl" />
+            <Skeleton key={i} className="h-64 w-full rounded bg-gray-100" />
           ))}
         </div>
       </div>
@@ -79,10 +78,10 @@ export default function FavoritesPage() {
 
   if (!user) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-24">
+      <div className="py-16">
         <EmptyState 
           title="Members Only" 
-          description="Please sign in to view your curated collection of Maison favorites." 
+          description="Please sign in to view your saved wishlist." 
           icon="🔒" 
         />
       </div>
@@ -90,51 +89,65 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
-      <div className="mb-12">
-        <h3 className="text-[10px] uppercase tracking-[0.3em] text-accent mb-2">Curated Wishlist</h3>
-        <h1 className="text-5xl font-bold text-luxury italic font-serif">Your <span className="text-accent">Favorites</span></h1>
+    <div className="space-y-8 text-gray-800">
+      <div>
+        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1 block">Curated Wishlist</span>
+        <h1 className="text-3xl font-serif text-gray-900 font-normal">Saved Properties</h1>
       </div>
 
       {favorites.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {favorites.map((fav) => (
-            <div key={fav.hotelId} className="space-y-4">
-              <DestinationCard
-                countryCode=""
-                countryName={fav.hotelName}
-                image={fav.hotelPhoto || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800"} 
-              />
-              <div className="px-2 flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-luxury italic font-serif line-clamp-1">{fav.hotelName}</h3>
-                  <Link href={`/hotel/${fav.hotelId}`} className="text-[10px] uppercase tracking-widest text-accent mt-1 hover:text-luxury transition-colors">View Sanctuary</Link>
+            <div key={fav.hotelId} className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="aspect-[4/3] bg-gray-50 overflow-hidden relative">
+                  <img
+                    src={fav.hotelPhoto || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800"} 
+                    alt={fav.hotelName}
+                    className="w-full h-full object-cover"
+                  />
+                  <button 
+                    onClick={() => handleRemoveFavorite(fav.hotelId)}
+                    className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm hover:scale-105 transition-transform"
+                    title="Remove from favorites"
+                  >
+                    ❤️
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleRemoveFavorite(fav.hotelId)}
-                  className="text-accent text-lg hover:opacity-75 transition-opacity"
-                  title="Remove from favorites"
+                
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 text-sm truncate mb-1">
+                    {fav.hotelName}
+                  </h3>
+                  <p className="text-xs text-gray-400">Added to Wishlist</p>
+                </div>
+              </div>
+
+              <div className="p-4 pt-0">
+                <Link
+                  href={`/hotel/${fav.hotelId}`}
+                  className="block text-center bg-gray-900 hover:bg-gray-800 text-white text-xs uppercase tracking-wider font-semibold py-2 rounded transition-colors"
                 >
-                  ❤️
-                </button>
+                  View Property
+                </Link>
               </div>
             </div>
           ))}
           
-          <div className="border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center p-8 text-center group hover:border-accent transition-colors min-h-[300px]">
-            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4 group-hover:bg-accent/10 group-hover:text-accent transition-all text-xl font-light">+</div>
-            <p className="text-xs text-gray-400 uppercase tracking-widest">Discover more to save</p>
-            <Link href="/explore" className="mt-4 text-[10px] font-bold text-luxury border-b border-luxury/10 hover:border-accent transition-all pb-1">EXPLORE COLLECTION</Link>
-          </div>
+          <Link href="/explore" className="border-2 border-dashed border-gray-250 rounded-lg flex flex-col items-center justify-center p-6 text-center hover:border-gray-400 transition-colors min-h-[250px] group">
+            <span className="text-2xl text-gray-400 group-hover:text-gray-600 transition-colors mb-2">+</span>
+            <p className="text-xs font-semibold text-gray-500 group-hover:text-gray-700">Add More Properties</p>
+            <span className="mt-2 text-[10px] text-gray-400 uppercase tracking-wider underline">Browse Collection</span>
+          </Link>
         </div>
       ) : (
-        <div className="py-24 bg-gray-50 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
-          <p className="text-gray-400 mb-8 italic">Your curated collection is currently a blank canvas.</p>
+        <div className="py-16 bg-gray-50 rounded border-2 border-dashed border-gray-200 text-center p-8 max-w-xl mx-auto">
+          <p className="text-gray-500 mb-6 font-light">Your wishlist is currently empty.</p>
           <Link 
             href="/explore" 
-            className="bg-luxury text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-black transition-all shadow-lg shadow-luxury/10"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors inline-block"
           >
-            Discover Sanctuaries
+            Explore Sanctuaries
           </Link>
         </div>
       )}

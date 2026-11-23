@@ -70,8 +70,6 @@ export default function CheckoutPage() {
   };
 
   const handleBooking = async (piId?: string) => {
-    // If handleBooking was called without a piId, and we don't have one in state, 
-    // it means it was called manually (which shouldn't happen now, but for safety)
     const confirmedPiId = piId || paymentIntentId;
     
     if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
@@ -112,14 +110,14 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <Skeleton className="h-12 w-1/2 mb-8" />
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        <Skeleton className="h-8 w-1/2 mb-8 bg-gray-100 rounded" />
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-2 space-y-6">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full bg-gray-100 rounded" />
+            <Skeleton className="h-48 w-full bg-gray-100 rounded" />
           </div>
-          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-64 w-full bg-gray-100 rounded" />
         </div>
       </div>
     );
@@ -127,11 +125,11 @@ export default function CheckoutPage() {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-xl mx-auto px-6 py-20 text-center">
         <EmptyState title="Booking Error" description={error} icon="⚠️" />
         <button 
           onClick={() => router.back()}
-          className="mt-8 mx-auto block bg-luxury text-white px-6 py-2 rounded-lg"
+          className="mt-6 bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-colors"
         >
           Go Back
         </button>
@@ -142,73 +140,77 @@ export default function CheckoutPage() {
   const finalTotal = appliedVoucher ? prebookData.selling_rate - appliedVoucher.discount : prebookData.selling_rate;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold mb-12 text-luxury italic font-serif">Complete Your <span className="text-accent">Reservation</span></h1>
+    <div className="max-w-6xl mx-auto px-6 py-12 text-gray-800">
+      <h1 className="text-3xl font-serif text-gray-900 font-normal mb-8">Complete Your Reservation</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
           {/* Hotel Summary */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <div className="flex items-start justify-between mb-6">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
               <div>
-                <h3 className="text-[10px] uppercase tracking-widest text-accent mb-2">Sanctuary Details</h3>
-                <h2 className="text-2xl font-bold text-luxury">{prebookData.hotelName || 'Maison Retreat'}</h2>
-                <p className="text-gray-500 text-sm">{prebookData.address}</p>
+                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">Hotel Details</h3>
+                <h2 className="text-xl font-semibold text-gray-900">{prebookData.hotelName || 'Property'}</h2>
+                <p className="text-xs text-gray-500 mt-1">{prebookData.address}</p>
               </div>
-              <div className="bg-gray-50 p-3 rounded-2xl text-center min-w-[100px]">
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Check-in</p>
-                <p className="font-bold text-luxury">{prebookData.checkin}</p>
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 text-center min-w-[100px] shrink-0">
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Check-in</p>
+                <p className="text-sm font-semibold text-gray-800">{prebookData.checkin}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-8 py-6 border-t border-gray-50">
+            <div className="grid grid-cols-2 gap-4 py-4 border-t border-gray-150">
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Room Type</p>
-                <p className="text-luxury font-medium">{prebookData.roomType || 'Deluxe Maison Suite'}</p>
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Room Type</p>
+                <p className="text-xs font-semibold text-gray-800">{prebookData.roomType || 'Standard Suite'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Board Basis</p>
-                <p className="text-luxury font-medium">{prebookData.boardBasis || 'Room Only'}</p>
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Board Basis</p>
+                <p className="text-xs font-semibold text-gray-800">{prebookData.boardBasis || 'Room Only'}</p>
               </div>
             </div>
           </div>
 
           {/* Guest Information */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <h3 className="text-[10px] uppercase tracking-widest text-accent mb-6">Guest Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Full Name</label>
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-xs uppercase tracking-wider text-gray-450 font-bold mb-4">Guest Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold px-1">Full Name</label>
                 <input
                   type="text"
                   value={guestDetails.name}
                   onChange={(e) => setGuestDetails({...guestDetails, name: e.target.value})}
-                  placeholder="E.g. Alexander Sterling"
-                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all"
+                  placeholder="Alexander Sterling"
+                  className="w-full px-3 py-2 rounded text-xs bg-gray-50 border border-gray-200 focus:bg-white focus:border-gray-400 outline-none transition-all"
+                  required
                 />
-                </div>
-                <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Email Address</label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold px-1">Email Address</label>
                 <input
                   type="email"
                   value={guestDetails.email}
                   onChange={(e) => setGuestDetails({...guestDetails, email: e.target.value})}
-                  placeholder="alexander@maison-resorts.com"
-                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all"
+                  placeholder="alexander@example.com"
+                  className="w-full px-3 py-2 rounded text-xs bg-gray-50 border border-gray-200 focus:bg-white focus:border-gray-400 outline-none transition-all"
+                  required
                 />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 px-1">Phone Number</label>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold px-1">Phone Number</label>
                 <input
                   type="tel"
                   value={guestDetails.phone}
                   onChange={(e) => setGuestDetails({...guestDetails, phone: e.target.value})}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full px-5 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-accent outline-none transition-all"
-                />              </div>
+                  className="w-full px-3 py-2 rounded text-xs bg-gray-50 border border-gray-200 focus:bg-white focus:border-gray-400 outline-none transition-all"
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          {/* Real Payment Integration */}
+          {/* Payment integration */}
           <LitePayment 
             prebookId={prebookData.prebookId}
             amount={finalTotal}
@@ -217,8 +219,8 @@ export default function CheckoutPage() {
           />
 
           {/* Voucher Section */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <h3 className="text-[10px] uppercase tracking-widest text-accent mb-6">Loyalty & Vouchers</h3>
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-xs uppercase tracking-wider text-gray-450 font-bold mb-4">Loyalty & Vouchers</h3>
             <PromoCodeInput
               onApply={(code, discount) => setAppliedVoucher({ code, discount })}
             />
@@ -227,45 +229,45 @@ export default function CheckoutPage() {
 
         {/* Sidebar Summary */}
         <div className="space-y-6">
-          <div className="bg-luxury text-white rounded-3xl p-8 shadow-xl sticky top-24">
-            <h2 className="text-xl font-bold mb-8 italic font-serif">Voyage <span className="text-accent">Summary</span></h2>
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm sticky top-24">
+            <h2 className="text-base font-semibold text-gray-900 mb-6">Reservation Summary</h2>
             
-            <div className="space-y-4 mb-8 pb-8 border-b border-white/10">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400 text-sm">Base Rate</span>
-                <PriceDisplay price={prebookData.selling_rate} currency={prebookData.currency} className="text-white" />
+            <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">Base Rate</span>
+                <PriceDisplay price={prebookData.selling_rate} currency={prebookData.currency} className="text-gray-900 font-semibold" />
               </div>
               {appliedVoucher && (
-                <div className="flex justify-between items-center text-accent">
-                  <span className="text-sm">Voucher ({appliedVoucher.code})</span>
+                <div className="flex justify-between items-center text-xs text-green-600 font-semibold">
+                  <span>Voucher ({appliedVoucher.code})</span>
                   <span>-${appliedVoucher.discount}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Taxes & Fees</span>
+              <div className="flex justify-between items-center text-xs text-gray-550">
+                <span className="text-gray-500">Taxes & Fees</span>
                 <span>Included</span>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex justify-between items-end mb-4">
-                <span className="text-gray-400 text-sm uppercase tracking-widest">Total</span>
-                <PriceDisplay price={finalTotal} currency={prebookData.currency} className="text-2xl font-bold text-accent" />
+            <div className="space-y-4">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total</span>
+                <PriceDisplay price={finalTotal} currency={prebookData.currency} className="text-xl font-bold text-gray-950" />
               </div>
               
-              <p className="text-[10px] text-center text-gray-500 leading-relaxed uppercase tracking-tighter">
-                Payment is processed securely via our luxury gateway. By paying, you agree to our terms of heritage and the hotel's cancellation policy.
+              <p className="text-[10px] text-center text-gray-400 leading-relaxed uppercase">
+                Payment is processed securely. By confirming your booking, you agree to our terms of service and cancellation policies.
               </p>
             </div>
           </div>
           
           {/* Trust Badge */}
-          <div className="text-center p-6 border border-dashed border-gray-200 rounded-3xl">
-            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Secure Reservation</p>
-            <div className="flex justify-center gap-4 grayscale opacity-50">
-              <span className="text-xs">VISA</span>
-              <span className="text-xs">MASTERCARD</span>
-              <span className="text-xs">AMEX</span>
+          <div className="text-center p-4 border border-dashed border-gray-200 rounded">
+            <p className="text-[10px] uppercase tracking-wider text-gray-450 mb-2 font-bold">Secure Checkout</p>
+            <div className="flex justify-center gap-4 text-[10px] text-gray-400 font-bold font-mono">
+              <span>VISA</span>
+              <span>MASTERCARD</span>
+              <span>AMEX</span>
             </div>
           </div>
         </div>
